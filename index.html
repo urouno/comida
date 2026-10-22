@@ -133,6 +133,11 @@ main{flex:1;padding:var(--e3) var(--e3) calc(96px + env(safe-area-inset-bottom))
 .d-tot b{display:block;font-size:var(--cuerpo);font-weight:600;color:var(--texto)}
 
 /* ---------- súper ---------- */
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:3px;background:var(--borde);padding:3px;
+  border-radius:var(--r1);margin-bottom:var(--e3)}
+.seg button{border:0;border-radius:9px;background:none;cursor:pointer;padding:9px 4px;
+  font-family:var(--tipo);font-size:var(--secundario);font-weight:600;color:var(--suave);min-height:38px}
+.seg button[aria-selected=true]{background:var(--fondo);color:var(--texto)}
 .lista{background:var(--fondo);border-radius:var(--r2);overflow:hidden}
 .ing{display:flex;align-items:center;gap:var(--e2);width:100%;border:0;background:none;
   cursor:pointer;padding:var(--e2) var(--e3);text-align:left;font-family:var(--tipo);min-height:56px}
@@ -311,10 +316,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
     <div id="semana"></div>
   </section>
 
-  <section class="vista" id="v-super">
-    <p class="rotulo">Lo que necesitas comprar</p>
-    <div id="super"></div>
-  </section>
+  <section class="vista" id="v-super"><div id="super"></div></section>
 </main>
 
 <nav role="tablist">
@@ -347,7 +349,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
    ================================================================== */
 
 /* ---------- catálogo de respaldo (la hoja manda al sincronizar) ---------- */
-const SEMILLA=[["guisado","Huevo en salsa verde","3 huevos",260,19,"v","Pide 3 huevos, no 2. La salsa verde casi no aporta calorías.","huevo"],["guisado","Huevo estrellado","2 pzas",200,13,"v","Pide que lo hagan con poco aceite.","huevo"],["guisado","Lentejas guisadas","1½ tazas",340,22,"v","Proteína y fibra juntas: de lo mejor que se cocina en tu casa.",""],["guisado","Soya a la mexicana","1½ tazas",280,28,"v","El mejor platillo de la lista: más proteína que la carne y baratísimo.","soya texturizada"],["guisado","Champiñones a la mexicana","1½ tazas",120,6,"v","Riquísimo, pero solo tiene 6 g de proteína. Por eso te agrego algo aparte.",""],["guisado","Caldo de pollo con verduras","1 plato",320,38,"v","Pide que te sirvan doble pollo: es la petición más importante de todas.",""],["guisado","Sopa de verduras con pollo","1 plato",280,28,"v","Si ves poco pollo, agrégale un huevo cocido.",""],["guisado","Pollo horneado o asado","150 g",250,38,"v","Un pollo entero el domingo te dura tres días.","pollo"],["guisado","Picadillo de res","1 taza",320,25,"v","Pide que te aparten antes de dorarlo para los tacos.",""],["guisado","Frijoles de la olla","1 taza",220,14,"v","No los quites del plato: traen proteína y fibra.",""],["guisado","Atún a la mexicana","1 taza",380,28,"a","Lo pesado es la mayonesa, no el atún: pide la mitad. El elote ya cuenta como tu carbohidrato.","atún de lata"],["guisado","Carne de res con chile","150 g",330,33,"a","Pide que te aparten tu porción antes de ponerle el chile.",""],["guisado","Mole con pollo","150 g",480,34,"a","El mole lleva chocolate, semillas y manteca. Mucho pollo, poca salsa.",""],["guisado","Papas a la mexicana","1 taza",240,5,"a","Ojo: esto cuenta como tu arroz, no como el guisado. Por eso te agrego proteína aparte.",""],["guisado","Tortitas de papa con atún","2 pzas",420,18,"r","Van fritas y son casi puro almidón. Máximo 2, y sin arroz.","atún de lata"],["guisado","Tacos dorados de picadillo","3 pzas",420,15,"r","El que más te frena. Máximo 3, con ensalada y sin arroz.",""],["des_bebida","Licuado de plátano y fresas","300 ml",320,14,"","","leche, plátano, fresas, chía"],["des_bebida","Licuado con leche en polvo","300 ml",400,22,"","Dos cucharadas de leche en polvo: la forma más barata de subirle proteína.","leche, leche en polvo, plátano, fresas, chía"],["des_bebida","Licuado de mango o melón","300 ml",330,14,"","","leche, mango, chía"],["des_bebida","Vaso de leche","250 ml",120,8,"","","leche"],["des_bebida","Yogur natural con fruta","200 g",160,10,"","Natural, no el de sabor: ese trae azúcar.","yogur natural, fruta"],["des_bebida","Yogur griego con fruta","170 g",160,17,"","","yogur griego, fruta"],["des_proteina","2 huevos revueltos","2 pzas",160,13,"","","huevo"],["des_proteina","3 huevos revueltos","3 pzas",240,19,"","","huevo"],["des_proteina","2 huevos estrellados","2 pzas",200,13,"","Poco aceite, en sartén antiadherente.","huevo"],["des_proteina","3 huevos a la mexicana","3 pzas",260,19,"","Jitomate y cebolla; el chile aparte.","huevo, jitomate, cebolla"],["des_proteina","Queso panela","80 g",210,17,"","Asado al comal sabe mejor que frío.","queso panela"],["des_proteina","Requesón","100 g",140,12,"","Se unta en el pan como queso crema.","requesón"],["des_proteina","Pollo deshebrado","100 g",165,25,"","Del pollo del domingo.","pollo"],["des_carbo","Sin pan","—",0,0,"","",""],["des_carbo","Pan integral tostado","1 reb.",80,4,"","","pan integral"],["des_carbo","Pan con crema de cacahuate","1 reb.+1 cda",175,8,"","Una cucharada rasa, no colmada.","pan integral, crema de cacahuate"],["des_carbo","2 tortillas de maíz","2 pzas",130,3,"","","tortillas de maíz"],["des_carbo","½ bolillo","½ pza",130,4,"","Medio, no entero.","bolillo"],["des_carbo","Granola sin endulzar y nueces","30+10 g",190,6,"","Medida, no a puñados.","granola sin endulzar, nueces"],["extra_proteina","2 huevos cocidos","2 pzas",140,13,"","Cuece 6 el domingo y los tienes toda la semana.","huevo"],["extra_proteina","pollo deshebrado","100 g",165,25,"","","pollo"],["extra_proteina","atún de lata","1 lata",110,24,"","Sin cocinar nada: se le echa encima.","atún de lata"],["extra_proteina","queso panela","80 g",210,17,"","","queso panela"],["extra_proteina","requesón","100 g",140,12,"","","requesón"],["extra_proteina","soya texturizada","½ taza",90,12,"","Se hidrata en agua caliente 10 minutos.","soya texturizada"],["extra_proteina","frijoles","½ taza",110,7,"","",""],["verdura","Verduras al vapor","1½ tazas",80,4,"","Las que ya hace tu mamá.",""],["verdura","Ensalada de hoja","2 tazas",90,3,"","Días 1 a 4 de la semana.","ensalada de hoja"],["verdura","Pepino y jitomate con limón","1½ tazas",50,2,"","Días 5 a 7.","pepino, jitomate, limón"],["verdura","Zanahoria y jícama","1½ tazas",70,2,"","Días 5 a 7.","zanahoria, jícama"],["verdura","Nopales","1 taza",40,2,"","","nopales"],["verdura","Calabacitas guisadas","1 taza",70,3,"","",""],["carbohidrato","Sin arroz ni pan","—",0,0,"","",""],["carbohidrato","1 tortilla de maíz","1 pza",65,2,"","","tortillas de maíz"],["carbohidrato","2 tortillas de maíz","2 pzas",130,3,"","","tortillas de maíz"],["carbohidrato","½ bolillo","½ pza",130,4,"","","bolillo"],["carbohidrato","Arroz","¾ taza",150,3,"","",""],["cena","Quesadillas de panela","2 pzas",320,20,"","Al comal, sin aceite: son 150 kcal de diferencia.","tortillas de maíz, queso panela"],["cena","Sándwich con huevo cocido","1 pza",320,20,"","Cuece 6 huevos el domingo.","pan integral, huevo"],["cena","Sándwich de pollo","1 pza",330,30,"","","pan integral, pollo"],["cena","Sándwich de atún","1 pza",365,28,"","Una cucharada rasa de mayonesa, no tres.","pan integral, atún de lata, mayonesa"],["cena","Atún cremoso en tostadas","1 lata+2",280,28,"","1 cucharada de mayonesa + 2 de yogur natural: sabe igual, 170 kcal menos.","atún de lata, yogur natural, mayonesa, tostadas"],["cena","Tacos de pollo","2 pzas",300,28,"","Tortilla de maíz.","tortillas de maíz, pollo"],["cena","Tacos de picadillo","2 pzas",330,22,"","De lo que cocinaron para mañana. Suaves, no dorados.","tortillas de maíz"],["cena","Requesón con jitomate en tostada","100 g",240,14,"","Cena de tres minutos.","requesón, jitomate, tostadas"],["cena","Lentejas (plato chico)","1 taza",230,15,"","Recalentadas de la comida.",""],["cena","Soya a la mexicana (plato chico)","1 taza",190,19,"","Mucha proteína y pocas calorías: la mejor cena de la lista.","soya texturizada"],["cena","Champiñones con 2 huevos","1 taza+2",280,19,"","Los champiñones solos no alcanzan; con huevo sí.","champiñones, huevo"],["cena","Huevo estrellado con frijoles","2+½ taza",310,20,"","Poco aceite y una tortilla, no tres.","huevo"],["cena","Fruta con panela y nueces","1 taza",400,20,"","Para los días que llegas tarde y sin hambre.","fruta, queso panela, nueces"],["acompanamiento","ensalada de hoja","2 tazas",90,3,"","","ensalada de hoja"],["acompanamiento","pepino y jitomate","1½ tazas",50,2,"","","pepino, jitomate"],["acompanamiento","verduras al vapor","1 taza",60,3,"","",""],["acompanamiento","vaso de leche","250 ml",120,8,"","","leche"],["acompanamiento","fruta","1 pza",80,1,"","","fruta"],["snack","Queso panela","80 g",210,17,"","Lo más fácil de llevar al trabajo.","queso panela"],["snack","2 huevos cocidos","2 pzas",140,13,"","Cuece 6 el domingo.","huevo"],["snack","Requesón con fruta","100 g",220,13,"","","requesón, fruta"],["snack","Yogur griego","170 g",160,17,"","","yogur griego"],["snack","Vaso de leche y nueces","250 ml+20 g",240,12,"","","leche, nueces"],["snack","Fruta con almendras","1 pza+20 g",200,6,"","","fruta, almendras"],["snack","Atún de lata","1 lata",110,24,"","El de más proteína y el más barato.","atún de lata"],["fuera","Café americano o negro","1 taza",5,0,"v","Sin azúcar no cuesta nada. Tómate los que quieras.",""],["fuera","Café con leche sin azúcar","1 taza",60,4,"v","",""],["fuera","Café de casa con leche y azúcar","1 taza",120,4,"a","Quítale el azúcar y bajas a 60.",""],["fuera","Café del Oxxo con leche","1 vaso grande",160,5,"a","",""],["fuera","Latte Starbucks grande","473 ml",190,12,"a","El latte simple es de los menos pesados.",""],["fuera","Latte con jarabe de avellana grande","473 ml",250,12,"a","El jarabe son 60 a 80 kcal. Pídelo sin jarabe o con la mitad.",""],["fuera","Frappuccino grande","473 ml",380,5,"r","Esto es un postre, no un café. Máximo uno cada tanto.",""],["fuera","Refresco","600 ml",250,0,"r","Lo que convierte una salida normal en una de 1,200 kcal.",""],["fuera","Refresco sin azúcar","600 ml",0,0,"v","Tu cambio más fácil.",""],["fuera","Agua de sabor","500 ml",130,0,"a","",""],["fuera","Rebanada de pizza","1 reb.",285,12,"a","Dos, no cuatro.",""],["fuera","Taco de carne","1 pza",180,10,"a","Cuatro de maíz es una cena normal.",""],["fuera","Palomitas chicas","1 bolsa",400,6,"r","Las grandes son 900. Compártelas.",""],["fuera","Hamburguesa sencilla","1 pza",500,25,"a","Sin papas y sin refresco azucarado.",""],["fuera","Papas fritas chicas","1 orden",230,3,"r","",""],["fuera","Enchiladas de cenaduría","1 orden",650,22,"r","Elige una sola cosa, no enchiladas Y pambazo.",""],["fuera","Pambazo","1 pza",550,18,"r","",""],["fuera","Gordita","1 pza",330,12,"a","",""],["fuera","Torta","1 pza",600,25,"a","",""],["fuera","Galletas o pan dulce","1 pza",250,4,"r","",""]];
+const SEMILLA=[["guisado","Huevo en salsa verde","3 huevos",260,19,"v","Pide 3 huevos, no 2. La salsa verde casi no aporta calorías.","huevo"],["guisado","Huevo estrellado","2 pzas",200,13,"v","Pide que lo hagan con poco aceite.","huevo"],["guisado","Lentejas guisadas","1½ tazas",340,22,"v","Proteína y fibra juntas: de lo mejor que se cocina en tu casa.",""],["guisado","Soya a la mexicana","1½ tazas",280,28,"v","El mejor platillo de la lista: más proteína que la carne y baratísimo.","soya texturizada"],["guisado","Champiñones a la mexicana","1½ tazas",120,6,"v","Riquísimo, pero solo tiene 6 g de proteína. Por eso te agrego algo aparte.",""],["guisado","Caldo de pollo con verduras","1 plato",320,38,"v","Pide que te sirvan doble pollo: es la petición más importante de todas.",""],["guisado","Sopa de verduras con pollo","1 plato",280,28,"v","Si ves poco pollo, agrégale un huevo cocido.",""],["guisado","Pollo horneado o asado","150 g",250,38,"v","Un pollo entero el domingo te dura tres días.","pollo"],["guisado","Picadillo de res","1 taza",320,25,"v","Pide que te aparten antes de dorarlo para los tacos.",""],["guisado","Frijoles de la olla","1 taza",220,14,"v","No los quites del plato: traen proteína y fibra.",""],["guisado","Atún a la mexicana","1 taza",380,28,"a","Lo pesado es la mayonesa, no el atún: pide la mitad. El elote ya cuenta como tu carbohidrato.","atún de lata, elote, mayonesa"],["guisado","Carne de res con chile","150 g",330,33,"a","Pide que te aparten tu porción antes de ponerle el chile.",""],["guisado","Mole con pollo","150 g",480,34,"a","El mole lleva chocolate, semillas y manteca. Mucho pollo, poca salsa.",""],["guisado","Papas a la mexicana","1 taza",240,5,"a","Ojo: esto cuenta como tu arroz, no como el guisado. Por eso te agrego proteína aparte.",""],["guisado","Tortitas de papa con atún","2 pzas",420,18,"r","Van fritas y son casi puro almidón. Máximo 2, y sin arroz.","atún de lata"],["guisado","Tacos dorados de picadillo","3 pzas",420,15,"r","El que más te frena. Máximo 3, con ensalada y sin arroz.",""],["des_bebida","Licuado de plátano y fresas","300 ml",320,14,"","","leche, plátano, fresas, chía"],["des_bebida","Licuado con leche en polvo","300 ml",400,22,"","Dos cucharadas de leche en polvo: la forma más barata de subirle proteína.","leche, leche en polvo, plátano, fresas, chía"],["des_bebida","Licuado de mango o melón","300 ml",330,14,"","","leche, mango, chía"],["des_bebida","Vaso de leche","250 ml",120,8,"","","leche"],["des_bebida","Yogur natural con fruta","200 g",160,10,"","Natural, no el de sabor: ese trae azúcar.","yogur natural, fruta"],["des_bebida","Yogur griego con fruta","170 g",160,17,"","","yogur griego, fruta"],["des_proteina","2 huevos revueltos","2 pzas",160,13,"","","huevo"],["des_proteina","3 huevos revueltos","3 pzas",240,19,"","","huevo"],["des_proteina","2 huevos estrellados","2 pzas",200,13,"","Poco aceite, en sartén antiadherente.","huevo"],["des_proteina","3 huevos a la mexicana","3 pzas",260,19,"","Jitomate y cebolla; el chile aparte.","huevo, jitomate, cebolla"],["des_proteina","Queso panela","80 g",210,17,"","Asado al comal sabe mejor que frío.","queso panela"],["des_proteina","Requesón","100 g",140,12,"","Se unta en el pan como queso crema.","requesón"],["des_proteina","Pollo deshebrado","100 g",165,25,"","Del pollo del domingo.","pollo"],["des_carbo","Sin pan","—",0,0,"","",""],["des_carbo","Pan integral tostado","1 reb.",80,4,"","","pan integral"],["des_carbo","Pan con crema de cacahuate","1 reb.+1 cda",175,8,"","Una cucharada rasa, no colmada.","pan integral, crema de cacahuate"],["des_carbo","2 tortillas de maíz","2 pzas",130,3,"","","tortillas de maíz"],["des_carbo","½ bolillo","½ pza",130,4,"","Medio, no entero.","bolillo"],["des_carbo","Granola sin endulzar y nueces","30+10 g",190,6,"","Medida, no a puñados.","granola sin endulzar, nueces"],["extra_proteina","2 huevos cocidos","2 pzas",140,13,"","Cuece 6 el domingo y los tienes toda la semana.","huevo"],["extra_proteina","pollo deshebrado","100 g",165,25,"","","pollo"],["extra_proteina","atún de lata","1 lata",110,24,"","Sin cocinar nada: se le echa encima.","atún de lata"],["extra_proteina","queso panela","80 g",210,17,"","","queso panela"],["extra_proteina","requesón","100 g",140,12,"","","requesón"],["extra_proteina","soya texturizada","½ taza",90,12,"","Se hidrata en agua caliente 10 minutos.","soya texturizada"],["extra_proteina","frijoles","½ taza",110,7,"","",""],["verdura","Verduras al vapor","1½ tazas",80,4,"","Las que ya hace tu mamá.",""],["verdura","Ensalada de hoja","2 tazas",90,3,"","Días 1 a 4 de la semana.","ensalada de hoja"],["verdura","Pepino y jitomate con limón","1½ tazas",50,2,"","Días 5 a 7.","pepino, jitomate, limón"],["verdura","Zanahoria y jícama","1½ tazas",70,2,"","Días 5 a 7.","zanahoria, jícama"],["verdura","Nopales","1 taza",40,2,"","","nopales"],["verdura","Calabacitas guisadas","1 taza",70,3,"","",""],["carbohidrato","Sin arroz ni pan","—",0,0,"","",""],["carbohidrato","1 tortilla de maíz","1 pza",65,2,"","","tortillas de maíz"],["carbohidrato","2 tortillas de maíz","2 pzas",130,3,"","","tortillas de maíz"],["carbohidrato","½ bolillo","½ pza",130,4,"","","bolillo"],["carbohidrato","Arroz","¾ taza",150,3,"","",""],["cena","Quesadillas de panela","2 pzas",320,20,"","Al comal, sin aceite: son 150 kcal de diferencia.","tortillas de maíz, queso panela"],["cena","Sándwich con huevo cocido","1 pza",320,20,"","Cuece 6 huevos el domingo.","pan integral, huevo"],["cena","Sándwich de pollo","1 pza",330,30,"","","pan integral, pollo"],["cena","Sándwich de atún","1 pza",365,28,"","Una cucharada rasa de mayonesa, no tres.","pan integral, atún de lata, mayonesa"],["cena","Atún cremoso en tostadas","1 lata+2",280,28,"","1 cucharada de mayonesa + 2 de yogur natural: sabe igual, 170 kcal menos.","atún de lata, yogur natural, mayonesa, tostadas"],["cena","Tacos de pollo","2 pzas",300,28,"","Tortilla de maíz.","tortillas de maíz, pollo"],["cena","Tacos de picadillo","2 pzas",330,22,"","De lo que cocinaron para mañana. Suaves, no dorados.","tortillas de maíz"],["cena","Requesón con jitomate en tostada","100 g",240,14,"","Cena de tres minutos.","requesón, jitomate, tostadas"],["cena","Lentejas (plato chico)","1 taza",230,15,"","Recalentadas de la comida.",""],["cena","Soya a la mexicana (plato chico)","1 taza",190,19,"","Mucha proteína y pocas calorías: la mejor cena de la lista.","soya texturizada"],["cena","Champiñones con 2 huevos","1 taza+2",280,19,"","Los champiñones solos no alcanzan; con huevo sí.","champiñones, huevo"],["cena","Huevo estrellado con frijoles","2+½ taza",310,20,"","Poco aceite y una tortilla, no tres.","huevo"],["cena","Fruta con panela y nueces","1 taza",400,20,"","Para los días que llegas tarde y sin hambre.","fruta, queso panela, nueces"],["acompanamiento","ensalada de hoja","2 tazas",90,3,"","","ensalada de hoja"],["acompanamiento","pepino y jitomate","1½ tazas",50,2,"","","pepino, jitomate"],["acompanamiento","verduras al vapor","1 taza",60,3,"","",""],["acompanamiento","vaso de leche","250 ml",120,8,"","","leche"],["acompanamiento","fruta","1 pza",80,1,"","","fruta"],["snack","Queso panela","80 g",210,17,"","Lo más fácil de llevar al trabajo.","queso panela"],["snack","2 huevos cocidos","2 pzas",140,13,"","Cuece 6 el domingo.","huevo"],["snack","Requesón con fruta","100 g",220,13,"","","requesón, fruta"],["snack","Yogur griego","170 g",160,17,"","","yogur griego"],["snack","Vaso de leche y nueces","250 ml+20 g",240,12,"","","leche, nueces"],["snack","Fruta con almendras","1 pza+20 g",200,6,"","","fruta, almendras"],["snack","Atún de lata","1 lata",110,24,"","El de más proteína y el más barato.","atún de lata"],["fuera","Café americano o negro","1 taza",5,0,"v","Sin azúcar no cuesta nada. Tómate los que quieras.",""],["fuera","Café con leche sin azúcar","1 taza",60,4,"v","",""],["fuera","Café de casa con leche y azúcar","1 taza",120,4,"a","Quítale el azúcar y bajas a 60.",""],["fuera","Café del Oxxo con leche","1 vaso grande",160,5,"a","",""],["fuera","Latte Starbucks grande","473 ml",190,12,"a","El latte simple es de los menos pesados.",""],["fuera","Latte con jarabe de avellana grande","473 ml",250,12,"a","El jarabe son 60 a 80 kcal. Pídelo sin jarabe o con la mitad.",""],["fuera","Frappuccino grande","473 ml",380,5,"r","Esto es un postre, no un café. Máximo uno cada tanto.",""],["fuera","Refresco","600 ml",250,0,"r","Lo que convierte una salida normal en una de 1,200 kcal.",""],["fuera","Refresco sin azúcar","600 ml",0,0,"v","Tu cambio más fácil.",""],["fuera","Agua de sabor","500 ml",130,0,"a","",""],["fuera","Rebanada de pizza","1 reb.",285,12,"a","Dos, no cuatro.",""],["fuera","Taco de carne","1 pza",180,10,"a","Cuatro de maíz es una cena normal.",""],["fuera","Palomitas chicas","1 bolsa",400,6,"r","Las grandes son 900. Compártelas.",""],["fuera","Hamburguesa sencilla","1 pza",500,25,"a","Sin papas y sin refresco azucarado.",""],["fuera","Papas fritas chicas","1 orden",230,3,"r","",""],["fuera","Enchiladas de cenaduría","1 orden",650,22,"r","Elige una sola cosa, no enchiladas Y pambazo.",""],["fuera","Pambazo","1 pza",550,18,"r","",""],["fuera","Gordita","1 pza",330,12,"a","",""],["fuera","Torta","1 pza",600,25,"a","",""],["fuera","Galletas o pan dulce","1 pza",250,4,"r","",""],["guisado","Enchiladas verdes","3 pzas",450,36,"a","Ya traen su tortilla: no les pongas arroz ni pan aparte.","tortillas de maíz, pollo, salsa verde"],["guisado","Bistec en salsa verde","150 g",300,38,"v","De tus planes de 2022. La salsa verde casi no aporta calorías.","bistec, salsa verde"],["guisado","Chuleta a la mexicana","1 pza",320,31,"a","Pide que te aparten tu porción antes de ponerle el chile.","chuleta, jitomate, pimiento morrón, cebolla"],["guisado","Coditos con atún","1 plato",430,30,"a","La pasta ya es tu carbohidrato. Atún en agua, escurrido.","pasta de codito, atún de lata, calabaza, zanahoria"],["guisado","Coditos con panela y crema","1 plato",480,28,"a","Una cucharada de crema, no tres. Sin chipotle.","pasta de codito, queso panela, crema"],["guisado","Ensalada de pollo","1 plato",450,35,"v","Tu ensalada de 2022: lleva elote y pasta, así que ya trae carbohidrato.","lechuga, jitomate, zanahoria, pollo, elote, pasta de codito"],["guisado","Ensalada de panela","1 plato",440,27,"v","Lleva elote y pasta: ya trae su carbohidrato.","lechuga, jitomate, queso panela, elote, pasta de codito"],["des_bebida","Licuado de manzana con avena","300 ml",290,11,"","La avena le da fibra, que es justo lo que le falta a tu desayuno.","leche, manzana, avena"],["des_bebida","Licuado de frutos rojos con avena","300 ml",270,11,"","","leche, frutos rojos, avena"],["des_bebida","Licuado de plátano con avena","300 ml",310,11,"","","leche, plátano, avena"],["des_proteina","Omelette de espinacas","2 huevos",180,13,"","Poco aceite. Las espinacas casi no suman calorías.","huevo, espinacas"],["des_carbo","Avena cocida","½ taza",150,5,"","De lo mejor que puedes desayunar para tu colesterol.","avena"],["verdura","Espinacas salteadas","1 taza",45,3,"","Aparecen en casi todos tus planes y no estaban en la app.","espinacas"],["verdura","Brócoli al vapor","1 taza",55,4,"","","brócoli"],["verdura","Calabaza con zanahoria","1 taza",60,2,"","","calabaza, zanahoria"],["carbohidrato","Pasta","½ taza",100,3,"","","pasta de codito"],["carbohidrato","Elote","½ taza",70,2,"","","elote"],["extra_proteina","bistec","100 g",200,25,"","","bistec"],["snack","Zanahoria con nueces","1 taza + 14 pzas",170,4,"","La colación de todos tus planes. Se lleva fácil al trabajo.","zanahoria, nueces"],["snack","Pepino con jícama y nueces","1 taza + 14 pzas",160,4,"","","pepino, jícama, nueces"],["snack","Jícama con almendras","1 taza + 20 pzas",190,6,"","","jícama, almendras"],["snack","Palomitas caseras","2 tazas",60,2,"","Hechas en casa y sin mantequilla. Las del cine son 400.","maíz palomero"],["cena","Coctel de frutas con yogur griego","1 plato",290,20,"","La versión de tus planes, pero con yogur griego: el doble de proteína.","yogur griego, fruta, almendras"],["cena","Coctel de frutas con yogur y avena","1 plato",300,12,"","Tu cena más repetida en 2022. Ojo: es la más baja en proteína de la lista.","yogur natural, fruta, avena, nueces"],["acompanamiento","espinacas","1 taza",45,3,"","","espinacas"]];
 const CAT=SEMILLA.map((a,i)=>({id:'S'+i,categoria:a[0],nombre:a[1],porcion:a[2],kcal:a[3],
   proteina:a[4],semaforo:a[5],nota:a[6],ingredientes:a[7]}));
 
@@ -357,7 +359,7 @@ const META_DEF={nombre:'Arturo',sexo:'hombre',edad:27,estatura:178,peso:84,peso_
 /* ---------- tiempos de comida ---------- */
 const TIEMPOS=[
  {id:'desayuno',nom:'Desayuno',hora:'7:10 am',base:'des_bebida',relleno:['des_proteina','des_carbo'],
-  fk:[.22,.34],fp:.24,
+  fk:[.22,.34],fp:.22,
   pregunta:'¿Con qué vas a desayunar?',
   guia:'Elige <b>solo la bebida</b>. Yo le pongo la proteína y el pan.'},
  {id:'snack',nom:'Media mañana',hora:'opcional',base:'snack',relleno:[],solo:true,
@@ -366,8 +368,8 @@ const TIEMPOS=[
   guia:'Los días que comes hasta las 3:30, esto evita que llegues con hambre a la noche.'},
  {id:'comida',nom:'Comida',hora:'12:30 pm',base:'guisado',relleno:['extra_proteina','verdura','carbohidrato'],
   fk:[.26,.42],fp:.33,
-  pregunta:'¿Qué cocinó tu mamá?',
-  guia:'Marca <b>solo el guisado</b>. Yo le pongo la verdura y el carbohidrato.'},
+  pregunta:'¿Qué hay para comer?',
+  guia:'Lo que cocinó tu mamá, o algo que te prepares. Marca <b>solo el platillo</b>: yo le pongo la verdura y el carbohidrato.'},
  {id:'cena',nom:'Cena',hora:'8:30 pm',base:'cena',relleno:['acompanamiento'],
   fk:[.17,.29],fp:.24,
   pregunta:'¿Qué vas a cenar?',
@@ -381,6 +383,10 @@ const TONO={prot:'var(--p1)',verd:'var(--p2)',carb:'var(--p3)'};
 const FAM=c=>['verdura','acompanamiento'].includes(c)?'verd'
             :['carbohidrato','des_carbo'].includes(c)?'carb':'prot';
 const CAUTELA={a:'ajusta la porción',r:'máximo una vez por semana'};
+/* Platillos que YA traen su carbohidrato: pasta, tortilla, papa, elote,
+   lenteja o frijol. A estos no se les suma arroz ni pan. */
+const CON_CARBO=/codito|pasta|enchilada|tortilla|tostada|taco|tortita|papa|elote|lenteja|frijol|arroz|sope|bolillo|pan\b|sándwich|granola|avena/i;
+const traeCarbo=n=>{const a=buscar(n); return CON_CARBO.test(n+' '+((a&&a.ingredientes)||''))};
 
 /* ================= ALMACENAMIENTO ================= */
 const LS={
@@ -390,7 +396,8 @@ const LS={
 let E=LS.get('estado',null)||{perfil:{...META_DEF},alimentos:CAT,favoritos:[],registro:[],peso:[]};
 if(!E.alimentos||!E.alimentos.length) E.alimentos=CAT;
 E.perfil={...META_DEF,...(E.perfil||{})};
-let COLA=LS.get('cola',[]), URL_BD=LS.get('url',''), MARCA=LS.get('marcados',{});
+let COLA=LS.get('cola',[]), URL_BD=LS.get('url',''), TENGO=LS.get('marcados',{});
+let panelSuper=LS.get('panel','comprar');   // 'comprar' | 'despensa'
 let hoy=fechaHoy(), dia=hoy, sincronizando=false, vista='dia';
 
 function guardar(){LS.set('estado',E);LS.set('cola',COLA)}
@@ -452,13 +459,17 @@ function ideas(T,elegidos){
   /* Si el platillo ya trae buena proteína, no le apiles otra encima:
      atún sobre el mole o panela en el caldo de pollo no los come nadie. */
   const EXTRAS=new Set(porCat('extra_proteina').map(a=>a.nombre));
+  const CARBOS=new Set(porCat('carbohidrato').concat(porCat('des_carbo'))
+    .filter(a=>+a.kcal>0).map(a=>a.nombre));
   const yaTrae=elegidos.some(n=>+buscar(n).proteina>=26);
+  const yaCarbo=elegidos.some(traeCarbo);
   const todas=out.map(c=>{
     const cs=c.filter(x=>x&&buscar(x)&&+buscar(x).kcal>0);
     let k=0,p=0; cs.forEach(n=>{const a=buscar(n);k+=+a.kcal;p+=+a.proteina});
     return {comb:cs,k,p};
   }).filter(x=>x.comb.length&&sinRepetir(x.comb)
-              &&!(yaTrae&&x.comb.some((n,i)=>i>0&&EXTRAS.has(n))));
+              &&!(yaTrae &&x.comb.some((n,i)=>i>0&&EXTRAS.has(n)))
+              &&!(yaCarbo&&x.comb.some((n,i)=>i>0&&CARBOS.has(n))));
 
   let r=[];
   for(const meta of [metaP,metaP-6,metaP-12,metaP-18,0]){
@@ -479,9 +490,7 @@ function ideas(T,elegidos){
 function reglaPlato(comb){
   const hay={prot:false,verd:false,carb:false};
   comb.forEach(n=>{const a=buscar(n); if(+a.kcal>0) hay[FAM(a.categoria)]=true});
-  /* Lentejas, frijoles, papa o elote YA son el carbohidrato del plato,
-     aunque vengan como guisado. */
-  if(comb.some(n=>/lenteja|frijol|papa|elote/i.test(n))) hay.carb=true;
+  if(comb.some(traeCarbo)) hay.carb=true;
   return '<div class="regla">'+[['prot','Proteína'],['verd','Verdura'],['carb','Carbohidrato']]
     .map(([f,t])=>'<span class="parte '+(hay[f]?'si':'no')+'">'
       +'<i'+(hay[f]?' style="background:'+TONO[f]+'"':'')+'></i>'+t+'</span>').join('')+'</div>';
@@ -640,27 +649,58 @@ function pintarSemana(){
     +'La barra es qué tanto de tu proteína cubre lo que ya tienes puesto.</p>';
 }
 
-/* ================= VISTA: SÚPER ================= */
+/* ================= VISTA: SÚPER =================
+   Dos listas sobre un mismo estado ("lo tengo en casa"):
+   · Comprar   = lo que piden tus próximos 7 días, menos lo que ya tienes.
+   · Despensa  = todos los ingredientes del catálogo, por cuántos platillos abren. */
+function ingredientesDe(desc){
+  const out=[];
+  String(desc).split(' · ').forEach(n=>{
+    const a=buscar(n.trim()); if(!a||!a.ingredientes)return;
+    String(a.ingredientes).split(',').forEach(g=>{g=g.trim().toLowerCase(); if(g)out.push(g)});});
+  return out;
+}
+function planeados(){
+  const c={};
+  for(let i=0;i<7;i++) delDia(suma(hoy,i)).forEach(r=>
+    ingredientesDe(r.descripcion).forEach(g=>c[g]=(c[g]||0)+1));
+  return Object.entries(c).sort((a,b)=>b[1]-a[1]);
+}
+function despensa(){
+  const c={};
+  E.alimentos.forEach(a=>{ if(!a.ingredientes||+a.kcal<=0)return;
+    String(a.ingredientes).split(',').forEach(g=>{g=g.trim().toLowerCase(); if(g)c[g]=(c[g]||0)+1});});
+  return Object.entries(c).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));
+}
+const filaIng=(g,txt)=>'<button class="ing '+(TENGO[g]?'ok':'')+'" data-ing="'+g+'">'
+  +'<span class="caja">'+ICO_CHECK+'</span><span class="nm">'+may(g)+'</span>'
+  +'<span class="ct">'+txt+'</span></button>';
+
 function pintarSuper(){
-  const cuenta={};
-  for(let i=0;i<7;i++) delDia(suma(hoy,i)).forEach(r=>{
-    String(r.descripcion).split(' · ').forEach(n=>{
-      const a=buscar(n.trim()); if(!a||!a.ingredientes)return;
-      String(a.ingredientes).split(',').forEach(g=>{
-        g=g.trim().toLowerCase(); if(g)cuenta[g]=(cuenta[g]||0)+1;});});});
-  const L=Object.entries(cuenta).sort((a,b)=>b[1]-a[1]);
   const cont=document.getElementById('super');
-  if(!L.length){
-    cont.innerHTML='<div class="vacio"><b>Nada que comprar todavía</b>'
-      +'Planea algunos días en Semana y aquí aparecen los ingredientes que vas a necesitar.</div>';
-    return;}
-  cont.innerHTML='<div class="lista">'+L.map(([g,n])=>
-    '<button class="ing '+(MARCA[g]?'ok':'')+'" data-ing="'+g+'">'
-    +'<span class="caja">'+ICO_CHECK+'</span><span class="nm">'+may(g)+'</span>'
-    +'<span class="ct num">'+n+'×</span></button>').join('')+'</div>'
-    +'<p class="instruccion" style="margin-top:var(--e3)">Sale de lo que tienes planeado en los próximos 7 días. '
-    +'Lo que cocina tu mamá no aparece, porque esa despensa no la compras tú.</p>'
-    +'<button class="btn texto" id="limpiar" style="margin-top:var(--e2)">Desmarcar todo</button>';
+  let c='<div class="seg">'+[['comprar','Comprar'],['despensa','Despensa']]
+    .map(([k,t])=>'<button data-panel="'+k+'" aria-selected="'+(panelSuper===k)+'">'+t+'</button>')
+    .join('')+'</div>';
+
+  if(panelSuper==='comprar'){
+    const L=planeados();
+    if(!L.length){
+      cont.innerHTML=c+'<div class="vacio"><b>Nada que comprar todavía</b>'
+        +'Planea algunos días en Semana y aquí aparece lo que vas a necesitar.</div>';
+      return;}
+    const faltan=L.filter(([g])=>!TENGO[g]).length;
+    c+='<p class="rotulo">'+(faltan?'Te faltan '+faltan+' de '+L.length:'Ya tienes todo')+'</p>'
+      +'<div class="lista">'+L.map(([g,n])=>filaIng(g,n+'×')).join('')+'</div>'
+      +'<p class="instruccion" style="margin-top:var(--e3)">Sale de lo que tienes planeado en los próximos 7 días. '
+      +'Lo que cocina tu mamá no aparece, porque esa despensa no la compras tú.</p>';
+  } else {
+    const L=despensa(), tengo=L.filter(([g])=>TENGO[g]).length;
+    c+='<p class="rotulo">Tienes '+tengo+' de '+L.length+'</p>'
+      +'<div class="lista">'+L.map(([g,n])=>filaIng(g,n+' platillo'+(n>1?'s':''))).join('')+'</div>'
+      +'<p class="instruccion" style="margin-top:var(--e3)">Todos los ingredientes del catálogo, '
+      +'ordenados por cuántos platillos te abren. Marca lo que ya tengas en casa y desaparece de Comprar.</p>';
+  }
+  cont.innerHTML=c+'<button class="btn texto" id="limpiar" style="margin-top:var(--e2)">Desmarcar todo</button>';
 }
 
 /* ==================================================================
@@ -1025,9 +1065,12 @@ document.getElementById('semana').addEventListener('click',e=>{
   dia=b.dataset.dia; irA('dia');
 });
 document.getElementById('super').addEventListener('click',e=>{
-  const b=e.target.closest('[data-ing]');
-  if(b){MARCA[b.dataset.ing]=!MARCA[b.dataset.ing];LS.set('marcados',MARCA);return pintarSuper()}
-  if(e.target.closest('#limpiar')){MARCA={};LS.set('marcados',MARCA);pintarSuper();aviso('Lista limpia')}
+  let b;
+  if(b=e.target.closest('[data-panel]')){
+    panelSuper=b.dataset.panel; LS.set('panel',panelSuper); return pintarSuper()}
+  if(b=e.target.closest('[data-ing]')){
+    const g=b.dataset.ing; TENGO[g]=!TENGO[g]; LS.set('marcados',TENGO); return pintarSuper()}
+  if(e.target.closest('#limpiar')){TENGO={};LS.set('marcados',TENGO);pintarSuper();aviso('Lista limpia')}
 });
 
 document.getElementById('ant').onclick=()=>{dia=suma(dia,-1);pintar()};
