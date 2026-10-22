@@ -3,7 +3,7 @@
    Si cambias index.html, súbele el número a VERSION para que
    el teléfono se traiga la versión nueva. */
 
-const VERSION = 'mi-dia-v2';
+const VERSION = 'mi-dia-v3';
 const ARCHIVOS = [
   './',
   './index.html',
