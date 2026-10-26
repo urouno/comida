@@ -352,6 +352,48 @@ nav button[aria-selected=true] svg{stroke-width:2.2}
   transition:opacity .18s ease;max-width:300px;text-align:center}
 #aviso.on{opacity:1}
 
+/* ---------- tarjetas: meta de peso, sugerencia, súper ---------- */
+.tarjeta{background:var(--fondo);border-radius:var(--r2);padding:var(--e3);margin-bottom:var(--e2)}
+.tarjeta.toque{display:block;width:100%;border:0;text-align:left;cursor:pointer;font-family:var(--tipo);color:var(--texto)}
+.tarjeta.toque:active{opacity:.85}
+.t-cab{display:flex;justify-content:space-between;align-items:baseline;gap:var(--e2);margin-bottom:var(--e2)}
+.t-et{font-size:var(--etiqueta);font-weight:600;color:var(--suave);text-transform:uppercase;letter-spacing:.06em}
+.t-et.acento{color:var(--acento)}
+.peso-fila{display:flex;justify-content:space-between;align-items:flex-end;gap:var(--e2)}
+.peso-fila .col{text-align:center}
+.peso-fila .col:first-child{text-align:left}
+.peso-fila .col:last-child{text-align:right}
+.peso-fila span{display:block;font-size:var(--etiqueta);font-weight:600;color:var(--suave);
+  text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.peso-fila b{display:block;font-size:var(--titulo);font-weight:600;line-height:1}
+.peso-fila .col:first-child b{font-size:var(--display);font-weight:700;letter-spacing:-.02em}
+.avance{height:6px;background:var(--borde);border-radius:3px;overflow:hidden;margin:var(--e2) 0 var(--e1)}
+.avance i{display:block;height:100%;background:var(--texto);border-radius:3px;transition:width .3s}
+.pie-t{display:flex;justify-content:space-between;gap:var(--e2);font-size:var(--secundario);color:var(--suave)}
+.sugerido{padding:var(--e2) var(--e3) var(--e3);border-top:1px solid var(--superficie)}
+.sugerido .t-et{display:block;margin-bottom:6px}
+.sugerido p{font-size:var(--cuerpo);font-weight:600;line-height:1.35}
+.sugerido small{display:block;font-size:var(--secundario);color:var(--suave);margin-top:2px;line-height:1.4}
+.dos{display:grid;grid-template-columns:1fr 1fr;gap:var(--e1);margin-top:var(--e2)}
+.dos .btn{min-height:44px;padding:var(--e1)}
+.dos .btn+.btn{margin-top:0}
+.btn.gris{background:var(--superficie);color:var(--texto);font-weight:500}
+.pasillo{display:flex;justify-content:space-between;align-items:baseline;margin:var(--e3) 4px var(--e1)}
+.pasillo b{font-size:var(--cuerpo);font-weight:600}
+.pasillo span{font-size:var(--secundario);color:var(--suave)}
+.pildoras{display:flex;flex-wrap:wrap;gap:var(--e1)}
+.pildora{display:flex;align-items:center;gap:4px;background:var(--fondo);border:1px solid var(--borde);
+  border-radius:20px;padding:4px 4px 4px 14px;font-size:var(--secundario);min-height:36px}
+.pildora button{width:28px;height:28px;border:0;background:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;border-radius:50%}
+.pildora button svg{width:12px;height:12px;stroke:var(--alerta);fill:none;stroke-width:2.4}
+.agregar-fila{display:flex;gap:var(--e1);margin-bottom:var(--e3)}
+.agregar-fila input{flex:1;min-width:0;min-height:44px;padding:var(--e1) var(--e2);border:1px solid var(--borde);
+  border-radius:var(--r1);background:var(--fondo);font-family:var(--tipo);font-size:16px;color:var(--texto);
+  -webkit-appearance:none}
+.agregar-fila input:focus{outline:0;border-color:var(--acento)}
+.agregar-fila .btn{width:auto;min-height:44px;padding:0 var(--e3)}
+
 button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--acento);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -384,7 +426,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 </header>
 
 <main>
-  <section class="vista on" id="v-dia"><div id="comidas"></div></section>
+  <section class="vista on" id="v-dia"><div id="peso-card"></div><div id="comidas"></div></section>
   <section class="vista" id="v-semana"><p class="rotulo">Los próximos 7 días</p><div id="semana"></div></section>
   <section class="vista" id="v-alimentos"><div id="alimentos"></div></section>
   <section class="vista" id="v-super"><div id="super"></div></section>
@@ -605,7 +647,7 @@ function ideas(T,elegidos,presu){
   const M=metas();
 
   const listas=[elegidos].concat(T.relleno.map(c=>{
-    const l=porCat(c).map(a=>a.nombre);
+    const l=porCat(c).map(a=>a.nombre).filter(n=>!esExcluido(n));
     if(NULOS[c]&&l.indexOf(NULOS[c])<0) l.push(NULOS[c]);
     if(OPCIONALES.indexOf(c)>=0) l.push('');
     return l;}));
@@ -697,7 +739,7 @@ function equivalencias(nombre,cant){
   const a=buscar(nombre); if(!a) return [];
   const objetivo=nutre(nombre,cant).k;
   if(objetivo<=0) return [];
-  const mismos=E.alimentos.filter(x=>x.nombre!==a.nombre&&num(x.kcal)>0&&(
+  const mismos=E.alimentos.filter(x=>x.nombre!==a.nombre&&num(x.kcal)>0&&!esExcluido(x.nombre)&&(
     a.categoria==='ingrediente' ? (x.categoria==='ingrediente'&&x.grupo===a.grupo)
                                 : x.categoria===a.categoria));
   return mismos.map(x=>{
@@ -710,6 +752,26 @@ function equivalencias(nombre,cant){
     return {nombre:x.nombre,cant:q,k:Math.round(t.k),p:Math.round(t.p),
             c:Math.round(t.c),g:Math.round(t.g)};
   }).sort((x,y)=>Math.abs(x.k-objetivo)-Math.abs(y.k-objetivo)).slice(0,14);
+}
+
+/* ================= LO QUE NO TE GUSTA =================
+   Lista de palabras (en el perfil, separada por comas). Todo alimento cuyo
+   nombre o ingredientes contenga una de ellas deja de sugerirse. */
+const sinAcento=t=>String(t).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+function excluidos(){
+  return String(E.perfil.excluidos||'').split(',').map(s=>s.trim().toLowerCase()).filter(Boolean);
+}
+function esExcluido(n){
+  const ex=excluidos(); if(!ex.length||!n) return false;
+  const a=buscar(n), t=sinAcento(String(n)+' '+((a&&a.ingredientes)||''));
+  return ex.some(x=>t.indexOf(sinAcento(x))>=0);
+}
+function guardarExcluidos(lista){
+  const limpio=[];
+  lista.forEach(x=>{x=String(x).trim().toLowerCase(); if(x&&limpio.indexOf(x)<0) limpio.push(x)});
+  E.perfil.excluidos=limpio.join(', ');
+  encolar({tipo:'perfil',uid:'perfil-excluidos',clave:'excluidos',valor:E.perfil.excluidos});
+  guardar();
 }
 
 /* ================= REGISTRO ================= */
@@ -798,11 +860,20 @@ async function sincronizar(forzar){
       const res=await fetch(URL_BD+'?action=bootstrap',{redirect:'follow'});
       const j=await res.json();
       if(j.ok){
+        const pend={}; COLA.forEach(o=>pend[o.uid]=1);
         /* la hoja manda, pero solo si ya trae el catálogo con macros */
         if(j.alimentos&&j.alimentos.length&&j.alimentos[0].carbos!==undefined) E.alimentos=j.alimentos;
-        if(j.perfil&&Object.keys(j.perfil).length) E.perfil={...META_DEF,...j.perfil};
+        if(j.perfil&&Object.keys(j.perfil).length){
+          const antes=E.perfil;
+          E.perfil={...META_DEF,...j.perfil};
+          /* si la hoja todavía no tiene estos datos, se quedan los del teléfono */
+          ['excluidos','peso_inicial'].forEach(k=>{
+            if((E.perfil[k]===undefined||E.perfil[k]==='')&&antes[k]!==undefined&&!pend['perfil-'+k])
+              E.perfil[k]=antes[k];
+            if(pend['perfil-'+k]) E.perfil[k]=antes[k];
+          });
+        }
         if(j.peso&&j.peso.length) E.peso=j.peso;
-        const pend={}; COLA.forEach(o=>pend[o.uid]=1);
         /* mezcla por uid: una respuesta vacía nunca borra lo del teléfono */
         const mezclar=(local,serv,norm)=>{
           const m=new Map();
@@ -829,11 +900,64 @@ const ICO_IR='<svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>';
 const ICO_LUPA='<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>';
 
 /* ================= VISTA: HOY ================= */
+const f1=n=>(Math.round(num(n)*10)/10).toFixed(1);
+function pesoInicial(){
+  const p=E.perfil; if(num(p.peso_inicial)>0) return num(p.peso_inicial);
+  const reg=E.peso.slice().sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha)));
+  return reg.length&&num(reg[0].kg)>0 ? num(reg[0].kg) : num(p.peso,84);
+}
+function registrarPeso(kg){
+  const p=E.perfil;
+  if(!(num(p.peso_inicial)>0)){
+    p.peso_inicial=pesoInicial();
+    encolar({tipo:'perfil',uid:'perfil-peso_inicial',clave:'peso_inicial',valor:p.peso_inicial});}
+  p.peso=kg;
+  encolar({tipo:'perfil',uid:'perfil-peso',clave:'peso',valor:kg});
+  E.peso=E.peso.filter(r=>String(r.fecha).slice(0,10)!==hoy);
+  E.peso.push({fecha:hoy,kg:kg,nota:''});
+  encolar({tipo:'peso',uid:'peso-'+hoy,fecha:hoy,kg:kg,nota:''});
+}
+function pintarPeso(){
+  const c=document.getElementById('peso-card');
+  if(dia!==hoy){c.innerHTML='';return}
+  const p=E.perfil, ini=pesoInicial(), act=num(p.peso,ini), meta=num(p.peso_meta,75);
+  const total=ini-meta, hecho=ini-act, falta=Math.max(0,act-meta);
+  const pct=total>0?Math.max(0,Math.min(100,hecho/total*100)):0;
+  c.innerHTML='<button class="tarjeta toque" id="b-peso">'
+    +'<div class="t-cab"><span class="t-et">Meta de peso</span><span class="t-et acento">Registrar peso</span></div>'
+    +'<div class="peso-fila"><div class="col"><span>Actual</span><b class="num">'+f1(act)+'</b></div>'
+    +'<div class="col"><span>Inicio</span><b class="num">'+f1(ini)+'</b></div>'
+    +'<div class="col"><span>Meta</span><b class="num">'+f1(meta)+'</b></div></div>'
+    +'<div class="avance"><i style="width:'+pct+'%"></i></div>'
+    +'<div class="pie-t"><span class="num">'
+    +(hecho>0.05?'Llevas −'+f1(hecho)+' kg':hecho<-0.05?'+'+f1(-hecho)+' kg desde el inicio':'Apenas empiezas')
+    +'</span><span class="num">'+(falta>0?'Faltan '+f1(falta)+' kg':'Meta cumplida')+'</span></div></button>';
+}
+/* El siguiente tiempo de comida vacío, y tu favorito más usado que cabe en
+   lo que le toca. Si ninguno cabe, no se sugiere nada. */
+function sugerencia(){
+  if(dia<hoy) return null;
+  const puesto={}; delDia(dia).forEach(r=>puesto[r.tiempo]=1);
+  const T=TIEMPOS.filter(x=>!x.solo&&!puesto[x.id])[0]; if(!T) return null;
+  const P=presupuesto(dia,T.id);
+  const favs=E.favoritos.filter(f=>f.tiempo===T.id
+      &&num(f.kcal)>=P.k*0.75&&num(f.kcal)<=P.k*1.12
+      &&!(f.items||[]).some(x=>esExcluido(x[0])))
+    .sort((a,b)=>num(b.veces)-num(a.veces)||Math.abs(num(a.kcal)-P.k)-Math.abs(num(b.kcal)-P.k));
+  return favs.length?{T:T,f:favs[0],P:P}:null;
+}
+function ponerFavorito(f){
+  f.veces=num(f.veces)+1; encolar(opFavorito(f));
+  if(f.items&&f.items.length) agregar(dia,f.tiempo,f.items);
+  else agregarSuelto(dia,f.tiempo,f.detalle,f.kcal,f.proteina,num(f.carbos),num(f.grasas));
+  guardar(); pintar(); aviso('Agregado · '+Math.round(num(f.kcal))+' kcal');
+}
 const tituloTxt=d=>'<b>'+may(String(d).split(' · ')[0])+'</b>';
 const restoTxt=d=>{const r=String(d).split(' · ').slice(1);
   return r.length?'con '+r.join(', ').toLowerCase()+' · ':''};
 
 function pintarDia(){
+  const S=sugerencia();
   document.getElementById('comidas').innerHTML=TIEMPOS.map(T=>{
     const rs=delDia(dia).filter(r=>r.tiempo===T.id);
     const k=rs.reduce((a,b)=>a+num(b.kcal),0), p=rs.reduce((a,b)=>a+num(b.proteina),0);
@@ -846,6 +970,12 @@ function pintarDia(){
       +'<span class="c-nom"><b>'+T.nom+'</b><span>'+sub+'</span></span>'
       +(rs.length?'<span class="c-tot"><b class="num">'+mil(k)+'</b><span class="num">'+Math.round(p)+' g</span></span>':'')
       +'<span class="mas-ico">'+ICO_MAS+'</span></button>';
+    if(S&&S.T.id===T.id&&!rs.length)
+      c+='<div class="sugerido"><span class="t-et acento">Tu favorito cabe</span>'
+        +'<p>'+esc(may(S.f.nombre))+'</p><small class="num">'+esc(S.f.detalle)+' · '
+        +Math.round(num(S.f.kcal))+' kcal · '+Math.round(num(S.f.proteina))+' g de proteína</small>'
+        +'<div class="dos"><button class="btn" data-sug-fav="'+S.f.uid+'">Ponerlo</button>'
+        +'<button class="btn gris" data-add="'+T.id+'">Elegir otro</button></div></div>';
     rs.forEach(r=>{
       c+='<div class="renglon '+(r.estado==='comido'?'comido':'')+'">'
         +'<button class="marca" data-tick="'+r.uid+'" aria-label="Marcar como comido">'+ICO_CHECK+'</button>'
@@ -925,25 +1055,45 @@ function pintarSemana(){
 }
 
 /* ================= VISTA: ALIMENTOS ================= */
-let filtroAl=LS.get('filtro',''), textoAl='';
+let filtroAl=LS.get('filtro',''), textoAl='', modoAl=LS.get('modoAl','todos');
 function pintarAlimentos(){
+  const ex=excluidos();
+  const seg='<div class="seg">'+[['todos','Mis alimentos'],['no','No me gusta'+(ex.length?' ('+ex.length+')':'')]]
+    .map(x=>'<button data-modo-al="'+x[0]+'" aria-selected="'+(modoAl===x[0])+'">'+x[1]+'</button>').join('')+'</div>';
+  if(modoAl==='no'){
+    const fuera=E.alimentos.filter(a=>a.nombre&&esExcluido(a.nombre)).length;
+    document.getElementById('alimentos').innerHTML=seg
+      +'<p class="instruccion" style="margin-bottom:var(--e2)">Lo que pongas aquí no te lo vuelvo a sugerir: '
+      +'ni para completar un plato, ni como cambio, ni en la despensa del súper. Basta una palabra: '
+      +'<b>mayonesa</b> deja fuera todo lo que la lleve.</p>'
+      +'<div class="agregar-fila"><input id="ex-in" placeholder="hígado, champiñón…" autocomplete="off" autocorrect="off">'
+      +'<button class="btn" id="ex-add">Agregar</button></div>'
+      +(ex.length
+        ? '<div class="pildoras">'+ex.map(x=>'<span class="pildora">'+esc(may(x))
+            +'<button data-ex-quitar="'+esc(x)+'" aria-label="Quitar '+esc(x)+'">'+ICO_X+'</button></span>').join('')+'</div>'
+          +'<p class="instruccion" style="margin-top:var(--e3)">Esto deja fuera <b>'+fuera+'</b> alimento'
+          +(fuera===1?'':'s')+' del catálogo. Lo que ya está en tu día o en tus favoritos no se toca.</p>'
+        : '<div class="vacio"><b>Todavía no hay nada</b>Agrega lo que no te gusta o no te cae bien.</div>');
+    return;
+  }
   const q=textoAl.trim().toLowerCase();
   let L=E.alimentos.filter(a=>a.nombre);
   if(filtroAl) L=L.filter(a=>a.grupo===filtroAl);
   if(q) L=L.filter(a=>String(a.nombre).toLowerCase().indexOf(q)>=0
                    ||String(a.ingredientes||'').toLowerCase().indexOf(q)>=0);
-  document.getElementById('alimentos').innerHTML=
-    '<div class="buscar">'+ICO_LUPA+'<input id="q-al" placeholder="Buscar alimento o ingrediente" '
+  document.getElementById('alimentos').innerHTML=seg
+    +'<div class="buscar">'+ICO_LUPA+'<input id="q-al" placeholder="Buscar alimento o ingrediente" '
     +'value="'+esc(textoAl)+'" autocomplete="off" autocorrect="off"></div>'
     +'<div class="chips">'+GRUPOS.map(x=>
       '<button data-grupo="'+x[0]+'" aria-selected="'+(filtroAl===x[0])+'">'+x[1]+'</button>').join('')+'</div>'
     +'<button class="btn" id="ir-constructor" style="margin-bottom:var(--e3)">Armar un plato con ingredientes</button>'
     +(L.length? '<p class="rotulo">'+L.length+' alimento'+(L.length>1?'s':'')+'</p><div class="lista">'
         +L.slice(0,120).map(a=>
-          '<button class="op caja-f" data-ver="'+esc(a.nombre)+'">'
+          '<button class="op caja-f'+(esExcluido(a.nombre)?' floja':'')+'" data-ver="'+esc(a.nombre)+'">'
           +'<span class="nm"><b>'+may(a.nombre)+'</b><span>'+esc(a.porcion)
-          +' · P '+Math.round(num(a.proteina))+' · C '+Math.round(num(a.carbos))
-          +' · G '+Math.round(num(a.grasas))+'</span></span>'
+          +(esExcluido(a.nombre)?' · no te gusta'
+            :' · P '+Math.round(num(a.proteina))+' · C '+Math.round(num(a.carbos))
+            +' · G '+Math.round(num(a.grasas)))+'</span></span>'
           +'<span class="kc"><b class="num">'+Math.round(num(a.kcal))+'</b><span>kcal</span></span>'
           +'<span class="ir">'+ICO_IR+'</span></button>').join('')+'</div>'
         +(L.length>120?'<p class="instruccion" style="margin-top:var(--e2)">Se muestran los primeros 120. Afina la búsqueda.</p>':'')
@@ -968,12 +1118,37 @@ function planeados(){
 function despensa(){
   const c={};
   E.alimentos.forEach(a=>{ if(!a.ingredientes||num(a.kcal)<=0||a.categoria==='ingrediente')return;
-    String(a.ingredientes).split(',').forEach(g=>{g=g.trim().toLowerCase(); if(g)c[g]=(c[g]||0)+1});});
+    String(a.ingredientes).split(',').forEach(g=>{g=g.trim().toLowerCase(); if(g&&!esExcluido(g))c[g]=(c[g]||0)+1});});
   return Object.keys(c).map(k=>[k,c[k]]).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));
 }
 const filaIng=(g,txt)=>'<button class="ing '+(TENGO[g]?'ok':'')+'" data-ing="'+esc(g)+'">'
   +'<span class="caja">'+ICO_CHECK+'</span><span class="nm">'+may(g)+'</span>'
   +'<span class="ct">'+txt+'</span></button>';
+
+const PASILLOS=['Frutas y verduras','Carnes y huevo','Lácteos','Tortillería y pan','Despensa'];
+function pasillo(g){
+  g=String(g).toLowerCase();
+  if(/cacahuate|palomero|salsa|aceite|mayonesa|atún|soya/.test(g)) return 'Despensa';
+  if(/leche|yogur|queso|panela|requesón|crema|kéfir/.test(g)) return 'Lácteos';
+  if(/pollo|pechuga|muslo|bistec|carne|chuleta|jamón|huevo|clara/.test(g)) return 'Carnes y huevo';
+  if(/tortilla|bolillo|tostada|\bpan\b/.test(g)) return 'Tortillería y pan';
+  if(/jitomate|cebolla|lechuga|ensalada|espinaca|calabaza|calabacita|zanahoria|chayote|nopal|champi|brócoli|pepino|jícama|ejote|pimiento|limón|plátano|manzana|fresa|mango|melón|fruta|fruto|aguacate|elote/.test(g))
+    return 'Frutas y verduras';
+  return 'Despensa';
+}
+function porPasillo(L,txt){
+  const g={}; L.forEach(x=>{const p=pasillo(x[0]); (g[p]=g[p]||[]).push(x)});
+  return PASILLOS.filter(p=>g[p]).map(p=>{
+    const pend=g[p].filter(x=>!TENGO[x[0]]).length;
+    return '<div class="pasillo"><b>'+p+'</b><span>'+(pend?pend+' pendiente'+(pend>1?'s':''):'listo')+'</span></div>'
+      +'<div class="lista">'+g[p].map(x=>filaIng(x[0],txt(x))).join('')+'</div>';
+  }).join('');
+}
+function avanceSuper(tengo,total,txt){
+  return '<div class="tarjeta"><div class="t-cab"><span class="t-et">'+txt+'</span>'
+    +'<span class="t-et num">'+tengo+' de '+total+'</span></div>'
+    +'<div class="avance" style="margin:0"><i style="width:'+(total?tengo/total*100:0)+'%"></i></div></div>';
+}
 
 function pintarSuper(){
   const cont=document.getElementById('super');
@@ -986,15 +1161,16 @@ function pintarSuper(){
       cont.innerHTML=c+'<div class="vacio"><b>Nada que comprar todavía</b>'
         +'Planea algunos días en Semana y aquí aparece lo que vas a necesitar.</div>';
       return;}
-    const faltan=L.filter(x=>!TENGO[x[0]]).length;
-    c+='<p class="rotulo">'+(faltan?'Te faltan '+faltan+' de '+L.length:'Ya tienes todo')+'</p>'
-      +'<div class="lista">'+L.map(x=>filaIng(x[0],x[1]+'×')).join('')+'</div>'
+    const tengo=L.filter(x=>TENGO[x[0]]).length;
+    c+=avanceSuper(tengo,L.length,tengo===L.length?'Ya tienes todo':'Lista del súper')
+      +porPasillo(L,x=>x[1]+'×')
+      +(tengo<L.length?'<button class="btn" id="compre-todo" style="margin-top:var(--e3)">Ya compré todo</button>':'')
       +'<p class="instruccion" style="margin-top:var(--e3)">Sale de lo que tienes planeado en los próximos 7 días. '
       +'Lo que cocina tu mamá no aparece, porque esa despensa no la compras tú.</p>';
   } else {
     const L=despensa(), tengo=L.filter(x=>TENGO[x[0]]).length;
-    c+='<p class="rotulo">Tienes '+tengo+' de '+L.length+'</p>'
-      +'<div class="lista">'+L.map(x=>filaIng(x[0],x[1]+' platillo'+(x[1]>1?'s':''))).join('')+'</div>'
+    c+=avanceSuper(tengo,L.length,'Tu despensa')
+      +porPasillo(L,x=>x[1]+' platillo'+(x[1]>1?'s':''))
       +'<p class="instruccion" style="margin-top:var(--e3)">Todos los ingredientes del catálogo, '
       +'ordenados por cuántos platillos te abren. Marca lo que ya tengas en casa y desaparece de Comprar.</p>';
   }
@@ -1079,6 +1255,7 @@ function pintarHoja(){
   if(H.modo==='detalle')     return pantallaDetalle();
   if(H.modo==='editar')      return pantallaEditar();
   if(H.modo==='ajustes')     return pantallaAjustes();
+  if(H.modo==='peso')        return pantallaPeso();
 }
 
 /* ---------- agregar: paso 1 ---------- */
@@ -1103,7 +1280,7 @@ function pasoElegir(){
       +Math.round(num(f.proteina))+' g</span></span></button>').join('');
     c+='<p class="rotulo sep">'+(dosPasos?'O arma uno nuevo':'O elige de la lista')+'</p>';
   }
-  const base=porCat(T.base).filter(a=>num(a.kcal)>0);
+  const base=porCat(T.base).filter(a=>num(a.kcal)>0&&!esExcluido(a.nombre));
   c+=base.map(a=>{
     const sel=H.sel.indexOf(a.nombre)>=0, cau=CAUTELA[a.semaforo], k=num(a.kcal);
     /* validación barata: ¿este solo ya se pasa del presupuesto? */
@@ -1209,10 +1386,11 @@ function pantallaSustituir(){
     +'<span class="kc"><b class="num">'+Math.round(act.k)+'</b><span class="num">'
     +Math.round(act.p)+' g</span></span></div></div>';
   c+= eq.length? '<p class="rotulo sep">Cámbialo por</p><div class="lista">'+eq.map(x=>{
-      const d=x.p-Math.round(act.p);
+      const d=x.p-Math.round(act.p), dk=x.k-Math.round(act.k);
+      const igual=Math.abs(dk)<=Math.max(10,act.k*0.04);
       return '<button class="op caja-f" data-eq="'+esc(x.nombre)+'" data-cant="'+x.cant+'">'
       +'<span class="nm"><b>'+may(x.nombre)+'</b><span>'+cantTexto(x.nombre,x.cant)
-      +' · P '+x.p+' · C '+x.c+' · G '+x.g+'</span></span>'
+      +' · '+(igual?'mismas kcal':(dk>0?'+':'')+dk+' kcal')+' · C '+x.c+' · G '+x.g+'</span></span>'
       +'<span class="kc"><b class="num">'+x.k+'</b><span class="num">'
       +(d>=0?'+':'')+d+' g prot</span></span></button>';}).join('')+'</div>'
     : '<div class="vacio"><b>No hay equivalentes</b>Este alimento no tiene otros del mismo tipo en tu catálogo.</div>';
@@ -1224,7 +1402,7 @@ function pantallaSustituir(){
 /* ---------- constructor ---------- */
 function abrirConstructor(idT,base){
   const T=TIEMPOS.filter(x=>x.id===idT)[0]||TIEMPOS[2], M=metas();
-  H={modo:'constructor',T,arm:base||[],objetivo:Math.round(M.kcal*((T.fk[0]+T.fk[1])/2)),q:''};
+  H={modo:'constructor',T,arm:base||[],objetivo:presupuesto(dia,T.id).k||Math.round(M.kcal*T.peso),q:''};
   pintarHoja(); abrirHoja();
 }
 function pantallaConstructor(){
@@ -1279,7 +1457,7 @@ function pantallaConstructor(){
 }
 function sugerencias(falta,t,M){
   const T=H.T, metaP=M.prot*(T.fp||0.3), faltaP=metaP-t.p;
-  const cand=E.alimentos.filter(a=>a.categoria==='ingrediente'&&num(a.kcal)>0);
+  const cand=E.alimentos.filter(a=>a.categoria==='ingrediente'&&num(a.kcal)>0&&!esExcluido(a.nombre));
   return cand.map(a=>{
     const porUni=num(a.kcal)/(num(a.cantidad,1)||1);
     let q=porUni>0?falta/porUni:0;
@@ -1312,6 +1490,8 @@ function pantallaDetalle(){
     +'<span class="nm"><b>'+may(x.nombre)+'</b><span>'+cantTexto(x.nombre,x.cant)
     +' · P '+x.p+' · C '+x.c+' · G '+x.g+'</span></span>'
     +'<span class="kc"><b class="num">'+x.k+'</b><span>kcal</span></span></button>').join('')+'</div>';
+  c+='<button class="btn texto" data-toggle-ex="'+esc(a.nombre)+'" style="margin-top:var(--e3)">'
+    +(esExcluido(a.nombre)?'Volver a sugerírmelo':'No me gusta, no me lo sugieras')+'</button>';
   document.getElementById('h-cuerpo').innerHTML=c;
   pie(a.categoria==='ingrediente'
     ? '<button class="btn" data-al-constructor="'+esc(a.nombre)+'">Usarlo para armar un plato</button>':'');
@@ -1369,6 +1549,25 @@ function pasoManual(){
   pie('<button class="btn" data-manual-ok="1">Agregarlo</button>');
 }
 
+/* ---------- peso ---------- */
+function abrirPeso(){H={modo:'peso'}; pintarHoja(); abrirHoja()}
+function pantallaPeso(){
+  const reg=E.peso.filter(r=>num(r.kg)>0)
+    .sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)));
+  const semana=reg.filter(r=>String(r.fecha).slice(0,10)>suma(hoy,-7));
+  const prom=semana.length?semana.reduce((s,r)=>s+num(r.kg),0)/semana.length:0;
+  cabecera({titulo:'Peso de hoy',
+    texto:'Pésate al despertar. Lo que cuenta es el <b>promedio de la semana</b>: un día puede variar 1 o 2 kg por agua y sal.'});
+  document.getElementById('h-cuerpo').innerHTML=
+    '<div class="campo"><label>Peso (kg)</label>'
+    +'<input id="p-kg" inputmode="decimal" value="'+num(E.perfil.peso)+'"></div>'
+    +(prom?'<div class="dato"><span class="k">Promedio de los últimos 7 días</span><span class="v num">'+f1(prom)+' kg</span></div>':'')
+    +(reg.length?'<p class="rotulo sep">Últimos registros</p>'+reg.slice(0,6).map(r=>
+      '<div class="dato"><span class="k">'+bonito(String(r.fecha).slice(0,10))+'</span>'
+      +'<span class="v num">'+f1(r.kg)+' kg</span></div>').join(''):'');
+  pie('<button class="btn" data-peso-ok="1">Guardar</button>');
+}
+
 /* ---------- ajustes ---------- */
 function abrirAjustes(){H={modo:'ajustes',sub:'menu'}; pintarHoja(); abrirHoja()}
 function pantallaAjustes(){
@@ -1401,6 +1600,9 @@ function pantallaAjustes(){
       +'<input id="a-peso" inputmode="decimal" value="'+num(p.peso)+'"></div>'
       +'<div class="campo"><label>Peso meta</label>'
       +'<input id="a-meta" inputmode="decimal" value="'+num(p.peso_meta)+'"></div></div>'
+      +'<div class="campo"><label>Peso con el que empezaste</label>'
+      +'<input id="a-ini" inputmode="decimal" value="'+f1(pesoInicial())+'">'
+      +'<small>Es el punto de partida de la barra de avance en Hoy.</small></div>'
       +'<div class="par"><div class="campo"><label>Edad</label>'
       +'<input id="a-edad" inputmode="numeric" value="'+num(p.edad)+'"></div>'
       +'<div class="campo"><label>Estatura (cm)</label>'
@@ -1605,6 +1807,21 @@ hoja.addEventListener('click',function(e){
     const a=buscar(b.getAttribute('data-al-constructor')); if(!a) return;
     return abrirConstructor('comida',[[a.nombre,num(a.cantidad,1)]]);}
 
+  /* peso */
+  if(g('[data-peso-ok]')){
+    const kg=num(document.getElementById('p-kg').value,0);
+    if(kg<30||kg>300){aviso('Revisa el número');return}
+    registrarPeso(Math.round(kg*10)/10);
+    guardar();cerrarHoja();pintar();aviso('Peso guardado · meta '+mil(metas().kcal)+' kcal');return}
+
+  /* no me gusta */
+  if(b=g('[data-toggle-ex]')){
+    const n=b.getAttribute('data-toggle-ex'), a=buscar(n);
+    const t=sinAcento(n+' '+((a&&a.ingredientes)||''));
+    if(esExcluido(n)){ guardarExcluidos(excluidos().filter(x=>t.indexOf(sinAcento(x))<0)); aviso('Se vuelve a sugerir'); }
+    else { guardarExcluidos(excluidos().concat([n])); aviso('Ya no te lo sugiero'); }
+    pintar(); return pintarHoja();}
+
   /* manual */
   if(g('[data-manual-ok]')){
     const n=document.getElementById('m-n').value.trim();
@@ -1642,8 +1859,13 @@ hoja.addEventListener('click',function(e){
       actividad:num(v('a-act'),1.3), ritmo:num(v('a-rit'),550),
       prot_por_kg:Math.min(3,Math.max(.8,num(v('a-ppk'),1.8))),
       pct_grasa:Math.min(50,Math.max(15,num(v('a-pg'),30)))};
+    const ini=limpiaCant(v('a-ini'));
+    if(ini>0) c.peso_inicial=ini;
+    else if(!(num(E.perfil.peso_inicial)>0)) c.peso_inicial=pesoInicial();
     Object.assign(E.perfil,c);
     Object.keys(c).forEach(k=>encolar({tipo:'perfil',uid:'perfil-'+k,clave:k,valor:c[k]}));
+    E.peso=E.peso.filter(r=>String(r.fecha).slice(0,10)!==hoy);
+    E.peso.push({fecha:hoy,kg:peso,nota:''});
     encolar({tipo:'peso',uid:'peso-'+hoy,fecha:hoy,kg:peso,nota:''});
     guardar();H.sub='menu';pintarHoja();pintar();aviso('Meta actualizada: '+mil(metas().kcal)+' kcal');return}
   if(g('[data-url-ok]')){
@@ -1710,14 +1932,36 @@ document.getElementById('comidas').addEventListener('click',function(e){
     cambiar(r.uid,{estado:nuevo}); guardar(); pintar();
     aviso(nuevo==='comido'?'Confirmado':'Marcado como planeado'); return}
   if(b=e.target.closest('[data-edit]')) return abrirEditar(b.getAttribute('data-edit'));
+  if(b=e.target.closest('[data-sug-fav]')){
+    const f=E.favoritos.find(x=>x.uid===b.getAttribute('data-sug-fav')); if(f) ponerFavorito(f); return}
   if(b=e.target.closest('[data-add]'))  return abrirAgregar(b.getAttribute('data-add'));
 });
 document.getElementById('semana').addEventListener('click',function(e){
   const b=e.target.closest('[data-dia]'); if(!b)return;
   dia=b.getAttribute('data-dia'); irA('dia');
 });
+document.getElementById('peso-card').addEventListener('click',function(e){
+  if(e.target.closest('#b-peso')) abrirPeso();
+});
+function agregarExcluido(){
+  const inp=document.getElementById('ex-in'); if(!inp) return;
+  const nuevos=inp.value.split(',').map(s=>s.trim()).filter(Boolean);
+  if(!nuevos.length){inp.focus();return}
+  guardarExcluidos(excluidos().concat(nuevos)); pintarAlimentos();
+  aviso(nuevos.length>1?'Agregados':'Agregado');
+  const n=document.getElementById('ex-in'); if(n) n.focus();
+}
+document.getElementById('alimentos').addEventListener('keydown',function(e){
+  if(e.target.id==='ex-in'&&e.key==='Enter'){e.preventDefault();agregarExcluido()}
+});
 document.getElementById('alimentos').addEventListener('click',function(e){
   let b;
+  if(b=e.target.closest('[data-modo-al]')){modoAl=b.getAttribute('data-modo-al');
+    LS.set('modoAl',modoAl);return pintarAlimentos()}
+  if(e.target.closest('#ex-add')) return agregarExcluido();
+  if(b=e.target.closest('[data-ex-quitar]')){
+    const x=b.getAttribute('data-ex-quitar');
+    guardarExcluidos(excluidos().filter(y=>y!==x)); pintarAlimentos(); aviso('Quitado'); return}
   if(b=e.target.closest('[data-grupo]')){filtroAl=b.getAttribute('data-grupo');
     LS.set('filtro',filtroAl);return pintarAlimentos()}
   if(e.target.closest('#ir-constructor')) return abrirConstructor('comida');
@@ -1736,6 +1980,8 @@ document.getElementById('super').addEventListener('click',function(e){
     panelSuper=b.getAttribute('data-panel'); LS.set('panel',panelSuper); return pintarSuper()}
   if(b=e.target.closest('[data-ing]')){
     const g=b.getAttribute('data-ing'); TENGO[g]=!TENGO[g]; LS.set('marcados',TENGO); return pintarSuper()}
+  if(e.target.closest('#compre-todo')){planeados().forEach(x=>TENGO[x[0]]=true);
+    LS.set('marcados',TENGO);pintarSuper();aviso('Todo marcado como comprado');return}
   if(e.target.closest('#limpiar')){TENGO={};LS.set('marcados',TENGO);pintarSuper();aviso('Lista limpia')}
 });
 
@@ -1766,8 +2012,8 @@ function irA(v){
 /* ================= ARRANQUE ================= */
 function pintar(){
   pintarMarcador();
-  if(vista==='dia') pintarDia();
-  else if(vista==='semana') pintarSemana();
+  if(vista==='dia'){ pintarPeso(); pintarDia(); }
+  else if(vista==='semana'){ document.getElementById('peso-card').innerHTML=''; pintarSemana(); }
   else if(vista==='alimentos') pintarAlimentos();
   else if(vista==='super') pintarSuper();
   punto();
