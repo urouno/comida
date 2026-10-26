@@ -175,6 +175,14 @@ main{flex:1;padding:var(--e3) var(--e3) calc(96px + env(safe-area-inset-bottom))
 .op .kc{flex:none;text-align:right;font-size:var(--secundario);color:var(--suave);line-height:1.35}
 .op .kc b{display:block;font-size:var(--cuerpo);font-weight:400;color:var(--texto)}
 .op[aria-pressed=true] .nm b{font-weight:600}
+.op.floja .nm b,.op.floja .kc b{color:var(--suave)}
+.previo{background:var(--superficie);border-radius:var(--r1);padding:var(--e2);margin-bottom:var(--e1)}
+.pv-items{font-size:var(--secundario);line-height:1.4;margin-bottom:6px}
+.pv-num{font-size:var(--secundario);color:var(--suave);line-height:1.4}
+.pv-num b{font-size:var(--cuerpo);color:var(--texto);font-weight:600}
+.previo-vacio{font-size:var(--secundario);color:var(--suave);text-align:center;padding:var(--e2) 0}
+.contra{font-size:var(--secundario);color:var(--suave);margin-top:6px}
+.contra.ok{color:var(--texto);font-weight:500}
 .op .ir{width:18px;height:18px;flex:none}
 .op .ir svg{width:18px;height:18px;stroke:var(--borde);fill:none;stroke-width:2}
 
@@ -199,7 +207,9 @@ main{flex:1;padding:var(--e3) var(--e3) calc(96px + env(safe-area-inset-bottom))
 .panel{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;
   max-height:92vh;background:var(--fondo);border-radius:var(--r3) var(--r3) 0 0;
   display:flex;flex-direction:column;overflow:hidden}
-.asa{width:36px;height:5px;background:var(--borde);border-radius:3px;margin:var(--e1) auto 0;flex:none}
+.tirador{flex:none;padding:10px 0 4px;cursor:grab;touch-action:none}
+.asa{width:40px;height:5px;background:var(--borde);border-radius:3px;margin:0 auto}
+.panel.soltando{transition:transform .22s ease}
 .h-cab{padding:var(--e2) var(--e3) var(--e2);flex:none}
 .h-nav{display:flex;align-items:center;min-height:36px;margin-bottom:var(--e1)}
 .h-atras{border:0;background:none;cursor:pointer;font-family:var(--tipo);font-size:var(--cuerpo);
@@ -395,7 +405,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 <div class="hoja" id="hoja">
   <div class="velo"></div>
   <div class="panel">
-    <div class="asa"></div>
+    <div class="tirador"><div class="asa"></div></div>
     <div class="h-cab" id="h-cab"></div>
     <div class="h-cuerpo" id="h-cuerpo"></div>
     <div class="h-pie" id="h-pie" hidden></div>
@@ -420,22 +430,26 @@ const CAT=SEMILLA.map((a,i)=>({id:'S'+i,categoria:a[0],nombre:a[1],porcion:a[2],
 const META_DEF={nombre:'Arturo',sexo:'hombre',edad:27,estatura:178,peso:84,peso_meta:75,
                 actividad:1.3,ritmo:550,prot_por_kg:1.8,pct_grasa:30};
 
+/* peso = qué tajada de las calorías del día le toca a este tiempo de comida.
+   fp   = qué tajada de la proteína. Los dos reparten el total y de ahí sale
+          el presupuesto de cada comida, que se reajusta solo durante el día. */
 const TIEMPOS=[
  {id:'desayuno',nom:'Desayuno',hora:'7:10 am',base:'des_bebida',relleno:['des_proteina','des_carbo'],
-  fk:[.22,.34],fp:.22,pregunta:'¿Con qué vas a desayunar?',
-  guia:'Elige <b>solo la bebida</b>. Yo le pongo la proteína y el pan.'},
+  peso:.28,fp:.22,pregunta:'¿Con qué vas a desayunar?',
+  guia:'Elige <b>solo la bebida</b>. Yo completo con proteína y pan hasta llegar a tu presupuesto.'},
  {id:'snack',nom:'Media mañana',hora:'opcional',base:'snack',relleno:[],solo:true,
-  fk:[0,.16],fp:0,pregunta:'¿Vas a llevar algo?',
+  peso:.08,fp:.10,pregunta:'¿Vas a llevar algo?',
   guia:'Los días que comes hasta las 3:30, esto evita que llegues con hambre a la noche.'},
  {id:'comida',nom:'Comida',hora:'12:30 pm',base:'guisado',relleno:['extra_proteina','verdura','carbohidrato'],
-  fk:[.26,.42],fp:.33,pregunta:'¿Qué hay para comer?',
-  guia:'Lo que cocinó tu mamá, o algo que te prepares. Marca <b>solo el platillo</b>: yo le pongo la verdura y el carbohidrato.'},
+  peso:.34,fp:.33,pregunta:'¿Qué hay para comer?',
+  guia:'Marca <b>solo el platillo</b>. Yo completo con verdura y carbohidrato hasta llegar a tu presupuesto.'},
  {id:'cena',nom:'Cena',hora:'8:30 pm',base:'cena',relleno:['acompanamiento'],
-  fk:[.17,.29],fp:.24,pregunta:'¿Qué vas a cenar?',
-  guia:'Elige <b>la base</b>. Yo le pongo el acompañamiento.'},
+  peso:.23,fp:.24,pregunta:'¿Qué vas a cenar?',
+  guia:'Elige <b>la base</b>. Yo completo con el acompañamiento.'},
  {id:'extra',nom:'Cafés y extras',hora:'a cualquier hora',base:'fuera',relleno:[],solo:true,
-  fk:[0,1],fp:0,pregunta:'¿Qué te tomaste o comiste?',
+  peso:.07,fp:.03,pregunta:'¿Qué te tomaste o comiste?',
   guia:'El café del trabajo, el refresco, lo que caiga. Un toque y queda registrado.'}];
+const porId=id=>TIEMPOS.filter(x=>x.id===id)[0];
 
 const TONO={prot:'var(--p1)',verd:'var(--p2)',carb:'var(--p3)'};
 const FAM=c=>['verdura','acompanamiento'].includes(c)?'verd'
@@ -487,7 +501,8 @@ function cantTexto(nombre,cant){
   if(a.unidad==='porción'){
     const q=num(cant,1);
     if(q===1) return a.porcion;
-    const etq={0.25:'¼',0.5:'½',0.75:'¾',1.5:'1½',2:'2',3:'3'}[q]||String(Math.round(q*100)/100);
+    const etq={0.25:'¼',0.5:'½',0.75:'¾',1.25:'1¼',1.5:'1½',1.75:'1¾',2:'2',3:'3'}[q]
+             ||String(Math.round(q*100)/100);
     return etq+' × '+a.porcion;
   }
   return (Math.round(num(cant)*10)/10)+' '+a.unidad;
@@ -554,13 +569,40 @@ function metas(){
   return {gasto:Math.round(gasto),kcal,prot,car,gra};
 }
 
+/* ================= PRESUPUESTO POR COMIDA =================
+   Las calorías del día se reparten entre los tiempos de comida según su peso.
+   Lo que ya registraste se descuenta y lo que sobra se reparte otra vez entre
+   los tiempos que siguen vacíos: si desayunaste de más, la comida se encoge
+   sola. Nunca baja del 60% de su tajada nominal, porque de todos modos
+   tienes que comer. */
+function presupuesto(fecha,tid){
+  const M=metas(), T=porId(tid); if(!T) return {k:0,p:0};
+  const rs=delDia(fecha);
+  const puesto={};
+  rs.forEach(r=>{puesto[r.tiempo]=(puesto[r.tiempo]||0)+num(r.kcal)});
+  const nomK=M.kcal*T.peso, nomP=M.prot*T.fp;
+  const usadoDia=rs.reduce((a,b)=>a+num(b.kcal),0);
+  /* Si este tiempo ya tiene algo y vas a agregar más, lo que importa no es su
+     tajada sino lo que te queda del día entero. */
+  if(puesto[tid]) return {k:Math.max(100,Math.round(M.kcal-usadoDia)),p:Math.round(nomP),
+                          nominal:Math.round(nomK),usado:Math.round(puesto[tid]),extra:true};
+  const vacios=TIEMPOS.filter(x=>!puesto[x.id]);
+  const pesoVacios=vacios.reduce((a,x)=>a+x.peso,0)||T.peso;
+  const libre=Math.max(0,M.kcal-usadoDia);
+  return {k:Math.round(Math.max(nomK*0.6, libre*T.peso/pesoVacios)),
+          p:Math.round(nomP), nominal:Math.round(nomK), usado:0, extra:false};
+}
+
 /* ================= MOTOR DE PLATOS ================= */
-function ideas(T,elegidos){
+function ideas(T,elegidos,presu){
   if(!elegidos.length) return [];
-  const M=metas(), min=M.kcal*T.fk[0], max=M.kcal*T.fk[1], metaP=M.prot*T.fp;
+  const P=presu||presupuesto(dia,T.id);
+  /* banda alrededor del presupuesto, no una fracción fija del día */
+  const min=P.k*0.78, max=P.k*1.22, metaP=P.p;
   if(T.solo) return elegidos.map(n=>{
     const a=buscar(n), items=[[n,num(a.cantidad,1)]], t=totalItems(items);
     return {items,comb:[n],k:t.k,p:t.p,c:t.c,g:t.g}});
+  const M=metas();
 
   const listas=[elegidos].concat(T.relleno.map(c=>{
     const l=porCat(c).map(a=>a.nombre);
@@ -595,14 +637,46 @@ function ideas(T,elegidos){
   for(let i=0;i<tiers.length;i++){
     r=todas.filter(x=>x.k>=min&&x.k<=max&&x.p>=tiers[i]);
     if(r.length) break;}
+  /* último recurso: lo más ligero que se pueda armar. Nunca devuelve vacío. */
   if(!r.length) r=todas.filter(x=>x.k<=max).sort((a,b)=>b.p-a.p).slice(0,8);
+  if(!r.length) r=todas.slice().sort((a,b)=>a.k-b.k).slice(0,8);
 
+  /* Si el plato se queda corto o se pasa, ajusta la porción del PLATILLO que
+     elegiste (no la de los acompañamientos: esos van en su medida estándar).
+     Es lo que harías tú: servirte un poco más o un poco menos.
+     Los platillos marcados en rojo nunca crecen. */
+  const ajusta=x=>{
+    if(!x.items.length) return x;
+    const a=buscar(x.items[0][0]); if(!a) return x;
+    const kBase=nutre(x.items[0][0],x.items[0][1]).k;
+    if(kBase<=0) return x;
+    const resto=x.k-kBase;
+    let f=(P.k-resto)/kBase;
+    const techo=a.semaforo==='r'?1:2;
+    /* en medias porciones: "sírvete 1½ veces" sí se puede hacer en la cocina,
+       "1¾ veces" no. En gramos o mililitros sí se afina a cuartos. */
+    const paso=a.unidad==='porción'?2:4;
+    f=Math.max(.5,Math.min(techo,Math.round(f*paso)/paso));
+    if(f===1) return x;
+    const items=[[x.items[0][0],Math.round(x.items[0][1]*f*1000)/1000]].concat(x.items.slice(1));
+    const t=totalItems(items);
+    return {items,comb:x.comb,k:t.k,p:t.p,c:t.c,g:t.g};
+  };
+
+  /* Ordena por qué tanto se acerca al presupuesto, en tramos de 40 kcal para
+     que platos parecidos no se barajen por diferencias que no se notan.
+     Luego: menos piezas, y más cerca de la meta de proteína. */
   const pos=n=>E.alimentos.findIndex(a=>a.nombre===n);
-  r.sort((a,b)=>a.comb.length-b.comb.length||Math.round(a.p/5)-Math.round(b.p/5)||a.k-b.k
+  const cerca=x=>Math.round(Math.abs(x.k-P.k)/40);
+  r.sort((a,b)=>cerca(a)-cerca(b)
+    ||a.comb.length-b.comb.length
+    ||Math.round(Math.abs(a.p-metaP)/5)-Math.round(Math.abs(b.p-metaP)/5)
     ||a.comb.reduce((s,n)=>s+pos(n),0)-b.comb.reduce((s,n)=>s+pos(n),0));
   const vistos={}, fin=[];
   r.forEach(x=>{const k=x.comb.slice(1).join('|');if(!vistos[k]){vistos[k]=1;fin.push(x)}});
-  return fin;
+  /* ajusta las primeras y vuelve a ordenarlas por cercanía */
+  const cab=fin.slice(0,30).map(ajusta).sort((a,b)=>cerca(a)-cerca(b)||a.comb.length-b.comb.length);
+  return cab.concat(fin.slice(30));
 }
 
 function reglaPlato(items){
@@ -763,9 +837,13 @@ function pintarDia(){
   document.getElementById('comidas').innerHTML=TIEMPOS.map(T=>{
     const rs=delDia(dia).filter(r=>r.tiempo===T.id);
     const k=rs.reduce((a,b)=>a+num(b.kcal),0), p=rs.reduce((a,b)=>a+num(b.proteina),0);
+    const P=presupuesto(dia,T.id);
+    const sub = rs.length
+      ? T.hora+' · de '+mil(P.nominal)+' kcal'
+      : T.hora+' · te tocan '+mil(P.k)+' kcal';
     let c='<section class="comida '+(rs.length?'llena':'')+'">'
       +'<button class="c-cab" data-add="'+T.id+'">'
-      +'<span class="c-nom"><b>'+T.nom+'</b><span>'+T.hora+'</span></span>'
+      +'<span class="c-nom"><b>'+T.nom+'</b><span>'+sub+'</span></span>'
       +(rs.length?'<span class="c-tot"><b class="num">'+mil(k)+'</b><span class="num">'+Math.round(p)+' g</span></span>':'')
       +'<span class="mas-ico">'+ICO_MAS+'</span></button>';
     rs.forEach(r=>{
@@ -809,12 +887,21 @@ function instruccion(t,M,futuro){
     if(t.kp>M.kcal*1.06) return 'Planeado: vas arriba de calorías. Quita un carbohidrato.';
     return 'Día planeado y bien armado.';
   }
-  if(!t.n) return 'Nada registrado todavía.';
+  if(!t.n) return 'Nada registrado todavía. Cada comida te dice cuántas calorías le tocan.';
   if(t.pend) return t.pend===1? 'Falta <b>1</b> por confirmar. Toca el círculo cuando te lo comas.'
                               : 'Faltan <b>'+t.pend+'</b> por confirmar. Toca el círculo cuando te las comas.';
+  /* mientras falten comidas del día, lo útil es cuánto queda, no el faltante
+     de proteína: todavía hay con qué cubrirlo */
+  const puesto={}; delDia(dia).forEach(r=>puesto[r.tiempo]=1);
+  const faltan=TIEMPOS.filter(T=>!puesto[T.id]&&T.id!=='snack'&&T.id!=='extra');
+  if(faltan.length){
+    const quedan=Math.round(M.kcal-t.kc);
+    return 'Te quedan <b>'+mil(quedan)+' kcal</b> para '
+      +faltan.map(T=>T.nom.toLowerCase()).join(' y ')+'.';
+  }
   const falta=Math.round(M.prot-t.pc);
-  if(falta>12) return 'Te faltan <b>'+falta+' g</b> de proteína. Una lata de atún son 24 g.';
   if(t.kc>M.kcal*1.06) return 'Te pasaste de calorías. Cuenta el promedio de la semana, no el día.';
+  if(falta>12) return 'Te faltan <b>'+falta+' g</b> de proteína. Una lata de atún son 24 g.';
   if(t.sinMacro) return '<b>Buen día.</b> ('+t.sinMacro+' registro'+(t.sinMacro>1?'s':'')+' sin desglose de macros.)';
   return '<b>Buen día.</b> Proteína cubierta sin pasarte.';
 }
@@ -920,10 +1007,55 @@ function pintarSuper(){
 const hoja=document.getElementById('hoja');
 let H={modo:null};
 
-function abrirHoja(){hoja.classList.add('on');document.body.style.overflow='hidden'}
-function cerrarHoja(){hoja.classList.remove('on');document.body.style.overflow='';
-  document.getElementById('h-cuerpo').scrollTop=0}
+const panelHoja=hoja.querySelector('.panel');
+function abrirHoja(){
+  panelHoja.classList.remove('soltando'); panelHoja.style.transform='';
+  hoja.classList.add('on'); document.body.style.overflow='hidden';
+}
+function cerrarHoja(){
+  hoja.classList.remove('on'); document.body.style.overflow='';
+  panelHoja.classList.remove('soltando'); panelHoja.style.transform='';
+  document.getElementById('h-cuerpo').scrollTop=0;
+}
 hoja.querySelector('.velo').onclick=cerrarHoja;
+
+/* ---------- cerrar deslizando hacia abajo ----------
+   Arranca desde el tirador o la cabecera, o desde el cuerpo cuando ya está
+   hasta arriba. Así no pelea con el scroll de la lista. */
+(function arrastre(){
+  let y0=0, dy=0, activo=false;
+  const cuerpo=()=>document.getElementById('h-cuerpo');
+  const puedeArrancar=t=>{
+    if(t.closest('input,select,textarea')) return false;
+    if(t.closest('.tirador,.h-cab')) return true;
+    const c=cuerpo();
+    return !!(c && c.scrollTop<=0 && t.closest('.h-cuerpo'));
+  };
+  panelHoja.addEventListener('touchstart',function(e){
+    if(e.touches.length!==1||!puedeArrancar(e.target)) return;
+    y0=e.touches[0].clientY; dy=0; activo=true;
+    panelHoja.classList.remove('soltando');
+  },{passive:true});
+  panelHoja.addEventListener('touchmove',function(e){
+    if(!activo) return;
+    const d=e.touches[0].clientY-y0;
+    if(d<=0){ dy=0; panelHoja.style.transform=''; return; }
+    /* resistencia: cuesta un poco más conforme baja */
+    dy=d<140? d : 140+(d-140)*0.4;
+    panelHoja.style.transform='translate(-50%,'+dy+'px)';
+  },{passive:true});
+  function soltar(){
+    if(!activo) return; activo=false;
+    panelHoja.classList.add('soltando');
+    if(dy>96){
+      panelHoja.style.transform='translate(-50%,110%)';
+      setTimeout(cerrarHoja,200);
+    } else panelHoja.style.transform='';
+    dy=0;
+  }
+  panelHoja.addEventListener('touchend',soltar,{passive:true});
+  panelHoja.addEventListener('touchcancel',soltar,{passive:true});
+})();
 
 function cabecera(o){
   let c='<div class="h-nav">';
@@ -955,9 +1087,13 @@ function abrirAgregar(idT){
   pintarHoja(); abrirHoja();
 }
 function pasoElegir(){
-  const T=H.T, dosPasos=!T.solo;
+  const T=H.T, dosPasos=!T.solo, P=presupuesto(dia,T.id);
+  H.presu=P;
   const favs=E.favoritos.filter(f=>f.tiempo===T.id).sort((a,b)=>num(b.veces)-num(a.veces));
-  cabecera({paso:1,total:dosPasos?2:1,titulo:T.pregunta,texto:T.guia});
+  cabecera({paso:1,total:dosPasos?2:1,titulo:T.pregunta,
+    texto:'<b>'+(P.extra?'Te quedan '+mil(P.k)+' kcal en el día.'
+                        :'Te tocan '+mil(P.k)+' kcal'+(dosPasos?' y '+P.p+' g de proteína':'')+'.')
+          +'</b> '+T.guia});
   let c='';
   if(favs.length){
     c+='<p class="rotulo" style="margin-top:var(--e2)">Tus favoritos · un toque</p>';
@@ -969,26 +1105,44 @@ function pasoElegir(){
   }
   const base=porCat(T.base).filter(a=>num(a.kcal)>0);
   c+=base.map(a=>{
-    const sel=H.sel.indexOf(a.nombre)>=0, cau=CAUTELA[a.semaforo];
-    return '<button class="op" aria-pressed="'+sel+'" data-sel="'+esc(a.nombre)+'">'
+    const sel=H.sel.indexOf(a.nombre)>=0, cau=CAUTELA[a.semaforo], k=num(a.kcal);
+    /* validación barata: ¿este solo ya se pasa del presupuesto? */
+    const aviso = k>P.k*1.05 ? 'se pasa de tu presupuesto' : '';
+    const detalle = esc(a.porcion)+(cau?' · '+cau:'')+(aviso?' · '+aviso:'');
+    return '<button class="op'+(aviso?' floja':'')+'" aria-pressed="'+sel+'" data-sel="'+esc(a.nombre)+'">'
       +(dosPasos?'<span class="marca">'+ICO_CHECK+'</span>':'')
-      +'<span class="nm"><b>'+esc(a.nombre)+'</b><span>'+esc(a.porcion)+(cau?' · '+cau:'')+'</span></span>'
-      +'<span class="kc"><b class="num">'+Math.round(num(a.kcal))+'</b><span class="num">'
+      +'<span class="nm"><b>'+esc(a.nombre)+'</b><span>'+detalle+'</span></span>'
+      +'<span class="kc"><b class="num">'+Math.round(k)+'</b><span class="num">'
       +Math.round(num(a.proteina))+' g</span></span></button>';}).join('');
   c+='<button class="btn texto" data-constructor="1" style="margin-top:var(--e3)">Armar un plato con ingredientes</button>'
     +'<button class="btn texto" data-manual="1">Comí otra cosa que no está aquí</button>';
   document.getElementById('h-cuerpo').innerHTML=c;
-  if(dosPasos){
-    const n=H.sel.length;
-    pie('<button class="btn" data-ver-plato="1"'+(n?'':' disabled')+'>'
-      +(n?'Ver el plato':'Marca algo para continuar')+'</button>');
-  } else pie('');
+  if(!dosPasos) return pie('');
+  if(!H.sel.length)
+    return pie('<button class="btn" disabled>Marca algo para continuar</button>');
+  /* vista previa del plato completo, sin salir de esta pantalla */
+  const props=ideas(T,H.sel,P);
+  if(!props.length)
+    return pie('<p class="previo-vacio">Con eso solo no salen las cuentas. Marca algo más.</p>');
+  if(!H.items||H.idxUsado!==H.idx){
+    H.items=props[H.idx%props.length].items.map(x=>[x[0],x[1]]);
+    H.idxUsado=H.idx; H.mult=1;}
+  const t=totalItems(H.items), dif=t.k-P.k;
+  pie('<div class="previo">'
+    +'<p class="pv-items">'+H.items.map(x=>may(x[0])).join(' · ')+'</p>'
+    +'<p class="pv-num"><b class="num">'+t.k+' kcal</b> · '+t.p+' g de proteína · '
+    +(Math.abs(dif)<=P.k*0.08 ? 'justo en tu presupuesto'
+      : Math.abs(dif)+' kcal '+(dif>0?'arriba':'abajo')+' de los '+mil(P.k))+'</p>'
+    +'</div>'
+    +'<button class="btn" data-poner="1">Ponerlo en mi día</button>'
+    +'<button class="btn texto" data-ver-plato="1">Ver y cambiar ingredientes</button>');
 }
 
 /* ---------- agregar: paso 2 ---------- */
 function pasoPlato(){
-  const T=H.T, props=ideas(T,H.sel);
-  cabecera({atras:'Cambiar',paso:2,total:2,titulo:'Así te queda el plato'});
+  const T=H.T, P=H.presu||presupuesto(dia,T.id), props=ideas(T,H.sel,P);
+  cabecera({atras:'Cambiar',paso:2,total:2,titulo:'Así te queda el plato',
+    texto:'Tu presupuesto para '+T.nom.toLowerCase()+' es de <b>'+mil(P.k)+' kcal</b> y '+P.p+' g de proteína.'});
   if(!props.length){
     document.getElementById('h-cuerpo').innerHTML=
       '<div class="vacio"><b>Con eso solo no salen las cuentas</b>'
@@ -999,8 +1153,12 @@ function pasoPlato(){
     H.idxUsado=H.idx; H.mult=1;}
   const t=totalItems(H.items), a0=buscar(H.items[0][0])||{};
   const regla=T.relleno.indexOf('verdura')>=0;
+  const dif=t.k-P.k, justo=Math.abs(dif)<=P.k*0.08;
   let c='<div class="plato"><span class="cifras"><b class="num">'+t.k
-    +'</b><span class="num">kcal · '+t.p+' g de proteína</span></span></div>'
+    +'</b><span class="num">kcal · '+t.p+' g de proteína</span></span>'
+    +'<p class="contra'+(justo?' ok':'')+'">'
+    +(justo?'Justo en tu presupuesto de '+mil(P.k)+' kcal'
+           :Math.abs(dif)+' kcal '+(dif>0?'arriba':'abajo')+' de tu presupuesto de '+mil(P.k))+'</p></div>'
     +(regla?reglaPlato(H.items):'')+desglose(t);
   c+='<ul class="partes'+(regla?'':' simple')+'" style="margin-top:var(--e3)">'+H.items.map((x,i)=>{
     const a=buscar(x[0])||{};
