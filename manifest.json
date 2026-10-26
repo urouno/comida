@@ -1,7 +1,7 @@
 {
-  "name": "Mi día · plan de comidas",
-  "short_name": "Mi día",
-  "description": "Planea tu desayuno, comida y cena, y lleva la cuenta de calorías y proteína.",
+  "name": "Alimentación · planear, armar y registrar",
+  "short_name": "Alimentación",
+  "description": "Planea tus comidas, arma platos ingrediente por ingrediente y lleva la cuenta de calorías y macros.",
   "lang": "es-MX",
   "start_url": "./index.html",
   "scope": "./",
