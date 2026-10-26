@@ -1,9 +1,9 @@
-/* Mi día · service worker
+/* Alimentación · service worker
    Guarda la app en el teléfono para que abra sin internet.
    Si cambias index.html, súbele el número a VERSION para que
    el teléfono se traiga la versión nueva. */
 
-const VERSION = 'mi-dia-v3';
+const VERSION = 'alimentacion-v1';
 const ARCHIVOS = [
   './',
   './index.html',
