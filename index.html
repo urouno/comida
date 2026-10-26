@@ -968,7 +968,7 @@ function pintarDia(){
     let c='<section class="comida '+(rs.length?'llena':'')+'">'
       +'<button class="c-cab" data-add="'+T.id+'">'
       +'<span class="c-nom"><b>'+T.nom+'</b><span>'+sub+'</span></span>'
-      +(rs.length?'<span class="c-tot"><b class="num">'+mil(k)+'</b><span class="num">'+Math.round(p)+' g</span></span>':'')
+      +(rs.length?'<span class="c-tot"><b class="num">'+mil(k)+' kcal</b><span class="num">'+Math.round(p)+' g prot</span></span>':'')
       +'<span class="mas-ico">'+ICO_MAS+'</span></button>';
     if(S&&S.T.id===T.id&&!rs.length)
       c+='<div class="sugerido"><span class="t-et acento">Tu favorito cabe</span>'
@@ -1048,7 +1048,7 @@ function pintarSemana(){
       +'<span class="d-info">'+(t.n?'<span class="bb"><i style="width:'+pct+'%"></i></span>':'')
       +'<small>'+(t.n? t.n+' comida'+(t.n>1?'s':'')+' · '+Math.round(pct)+'% de tu proteína'
                      :'Sin planear')+'</small></span>'
-      +'<span class="d-tot">'+(t.n?'<b class="num">'+mil(t.kp)+'</b><span class="num">'+Math.round(t.pp)+' g</span>':'—')+'</span>'
+      +'<span class="d-tot">'+(t.n?'<b class="num">'+mil(t.kp)+' kcal</b><span class="num">'+Math.round(t.pp)+' g prot</span>':'—')+'</span>'
       +'</button>';
   }).join('')+'<p class="instruccion" style="margin-top:var(--e3)">Toca un día para planearlo. '
     +'La barra es qué tanto de tu proteína cubre lo que ya tienes puesto.</p>';
@@ -1276,8 +1276,8 @@ function pasoElegir(){
     c+='<p class="rotulo" style="margin-top:var(--e2)">Tus favoritos · un toque</p>';
     c+=favs.map(f=>'<button class="op" data-fav="'+f.uid+'">'
       +'<span class="nm"><b>'+may(f.nombre)+'</b><span>'+esc(f.detalle)+'</span></span>'
-      +'<span class="kc"><b class="num">'+Math.round(num(f.kcal))+'</b><span class="num">'
-      +Math.round(num(f.proteina))+' g</span></span></button>').join('');
+      +'<span class="kc"><b class="num">'+Math.round(num(f.kcal))+' kcal</b><span class="num">'
+      +Math.round(num(f.proteina))+' g prot</span></span></button>').join('');
     c+='<p class="rotulo sep">'+(dosPasos?'O arma uno nuevo':'O elige de la lista')+'</p>';
   }
   const base=porCat(T.base).filter(a=>num(a.kcal)>0&&!esExcluido(a.nombre));
@@ -1289,8 +1289,8 @@ function pasoElegir(){
     return '<button class="op'+(aviso?' floja':'')+'" aria-pressed="'+sel+'" data-sel="'+esc(a.nombre)+'">'
       +(dosPasos?'<span class="marca">'+ICO_CHECK+'</span>':'')
       +'<span class="nm"><b>'+esc(a.nombre)+'</b><span>'+detalle+'</span></span>'
-      +'<span class="kc"><b class="num">'+Math.round(k)+'</b><span class="num">'
-      +Math.round(num(a.proteina))+' g</span></span></button>';}).join('');
+      +'<span class="kc"><b class="num">'+Math.round(k)+' kcal</b><span class="num">'
+      +Math.round(num(a.proteina))+' g prot</span></span></button>';}).join('');
   c+='<button class="btn texto" data-constructor="1" style="margin-top:var(--e3)">Armar un plato con ingredientes</button>'
     +'<button class="btn texto" data-manual="1">Comí otra cosa que no está aquí</button>';
   document.getElementById('h-cuerpo').innerHTML=c;
@@ -1383,15 +1383,15 @@ function pantallaSustituir(){
     texto:'Alternativas con un aporte parecido. La cantidad ya viene ajustada para que las calorías cuadren.'});
   let c='<p class="rotulo">Ahora tienes</p><div class="lista"><div class="op caja-f" style="cursor:default">'
     +'<span class="nm"><b>'+may(nom)+'</b><span>'+cantTexto(nom,cant)+'</span></span>'
-    +'<span class="kc"><b class="num">'+Math.round(act.k)+'</b><span class="num">'
-    +Math.round(act.p)+' g</span></span></div></div>';
+    +'<span class="kc"><b class="num">'+Math.round(act.k)+' kcal</b><span class="num">'
+    +Math.round(act.p)+' g prot</span></span></div></div>';
   c+= eq.length? '<p class="rotulo sep">Cámbialo por</p><div class="lista">'+eq.map(x=>{
       const d=x.p-Math.round(act.p), dk=x.k-Math.round(act.k);
       const igual=Math.abs(dk)<=Math.max(10,act.k*0.04);
       return '<button class="op caja-f" data-eq="'+esc(x.nombre)+'" data-cant="'+x.cant+'">'
       +'<span class="nm"><b>'+may(x.nombre)+'</b><span>'+cantTexto(x.nombre,x.cant)
       +' · '+(igual?'mismas kcal':(dk>0?'+':'')+dk+' kcal')+' · C '+x.c+' · G '+x.g+'</span></span>'
-      +'<span class="kc"><b class="num">'+x.k+'</b><span class="num">'
+      +'<span class="kc"><b class="num">'+x.k+' kcal</b><span class="num">'
       +(d>=0?'+':'')+d+' g prot</span></span></button>';}).join('')+'</div>'
     : '<div class="vacio"><b>No hay equivalentes</b>Este alimento no tiene otros del mismo tipo en tu catálogo.</div>';
   c+='<button class="btn peligro" data-quitar-parte="1" style="margin-top:var(--e3)">Quitarlo del plato</button>';
@@ -1429,7 +1429,7 @@ function pantallaConstructor(){
       if(sug.length) c+='<p class="rotulo sep">Para cerrar la brecha</p><div class="lista">'+sug.map(s=>
         '<button class="op caja-f" data-sug="'+esc(s.nombre)+'" data-cant="'+s.cant+'">'
         +'<span class="nm"><b>'+may(s.nombre)+'</b><span>'+cantTexto(s.nombre,s.cant)+' · '+s.razon+'</span></span>'
-        +'<span class="kc"><b class="num">'+s.k+'</b><span class="num">'+s.p+' g</span></span></button>').join('')+'</div>';
+        +'<span class="kc"><b class="num">'+s.k+' kcal</b><span class="num">'+s.p+' g prot</span></span></button>').join('')+'</div>';
     }
   } else {
     c+='<div class="vacio"><b>Todavía no hay nada</b>Busca abajo y toca para agregar. '
